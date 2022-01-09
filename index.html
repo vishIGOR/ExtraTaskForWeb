@@ -1,38 +1,85 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="/css/index.css">
-    <title></title>
+    <link rel="stylesheet" href="/css/controls.css">
+    <link rel="stylesheet" href="/css/objects.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css"
+        integrity="sha384-zCbKRCUGaJDkqS1kPbPd7TveP5iyJE0EjAuZQTgFLD2ylzuqKfdKlfG/eSrtxUkn" crossorigin="anonymous">
+    <title>Extra task for Web</title>
 </head>
-<body >
-    <header>
-        <img src="/images/HITS_Logo.png" id="logo">
-        <div>HP: </div>
-        <div id="HP">100</div>
-        <div>Score: </div>
-        <div id="score">0</div>
-    </header>
 
-    <div id = "main_div">
-        <div id ="sidebar">
-            <div id="mouse_control">
-                <div id="arrow_top" class="arrow"></div>
-                <div id="medium_row">
-                    <div id="arrow_left" class="arrow"></div>
-                    <div id="shoot">SHOOT</div>
-                    <div id="arrow_right" class="arrow"></div>
-                </div>
-                <div id="arrow_down" class="arrow"></div>
+<body>
+    <div class="header color-theme">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <img src="/images/HITS_Logo.png" id="logo" class="mr-3">
+                <h5 class="mr-2 my-0">HP: </h5>
+                <h5 id="HP" class="mr-3 my-0">100</h5>
+                <h5 class="mr-3 my-0">Score: </h5>
+                <h5 id="score" class="mr-3 my-0">0</h5>
             </div>
         </div>
-        <div id = "content">
-            <!-- <div class="enemy1"></div> -->
+
+    </div>
+
+    <div id="main_div" class="continer-fluid d-flex">
+        <div class="row d-flex flex-column flex-md-row w-100 m-0">
+            <div id="content" class="col col-md-auto">
+                <!-- <div class="enemy1"></div> -->
+            </div>
+
+            <div id="sidebar" class="col-md-auto h-auto d-flex justify-content-center align-items-center p-0">
+                <div class="row container-md   justify-content-center d-flex flex-row flex-md-column p-0" >
+                    <div class="row-md d-flex justify-content-md-center align-items-center my-4">
+                        <div class="col-auto col-md-4">
+                            <div id="arrow_top" class="arrow "></div>
+                        </div>
+                    </div>
+                    <div class="row-md d-flex align-items-center">
+                        <div class="col-auto col-md-4">
+                            <div id="arrow_left" class="arrow"></div>
+                        </div>
+                        <div class="col-auto col-md-4">
+                            <div id="shoot">SHOOT</div>
+                        </div>
+                        <div class="col-auto col-md-4">
+                            <div id="arrow_right" class="arrow"></div>
+                        </div>
+                    </div>
+                    <div class="row-md d-flex justify-content-md-center align-items-center my-4">
+                        <div class="col-auto col-md-4">
+                            <div id="arrow_down" class="arrow"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- <div id="mouse_control">
+                    <div id="arrow_top" class="arrow"></div>
+                    <div id="medium_row">
+                        <div id="arrow_left" class="arrow"></div>
+                        <div id="shoot">SHOOT</div>
+                        <div id="arrow_right" class="arrow"></div>
+                    </div>
+                    <div id="arrow_down" class="arrow"></div>
+                </div> -->
+            </div>
+
         </div>
+
     </div>
 
     <!-- <footer></footer> -->
 
     <!-- <script src="/scripts/index.js"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"
+        integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-fQybjgWLrvvRgtW6bFlB7jaZrFsaBXjsOMm/tB9LTS58ONXgqbR9W8oWht/amnpF"
+        crossorigin="anonymous"></script>
+
 </body>
+
 </html>

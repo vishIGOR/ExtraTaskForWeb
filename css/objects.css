@@ -1,0 +1,29 @@
+.enemy1, .player{
+    transition-property: left,top;
+    transition-duration: 250ms;
+    
+    background-size: 100%;
+    position: relative;
+}
+
+.enemy1{
+    background-image: url(/images/Starships/Enemy_Ship_1.png);
+}
+
+.player{
+    background-image: url(/images/Starships/Hero_Ship.png);
+}
+
+.enemy1_bullet{
+    background-image: url(/images/Shots/Enemy_Shot_1.png);
+}
+
+
+.player_bullet{
+    background-image: url(/images/Shots/Hero_Shot.png);
+    transition-property: left, top;
+    transition-duration: 150ms;
+    
+    background-size: 100%;
+    position: relative;
+}
