@@ -4,7 +4,7 @@ html {
 
 body {
     margin: 0;
-    background-image: url("/images/Game_Field_Background.png");
+    /* background-image: url("/images/Game_Field_Background.png"); */
     
     font-size: 20px !important;
     font-family: Arial !important;
@@ -14,7 +14,44 @@ body {
     display: flex;
     flex-direction: column;
 
-    backdrop-filter: blur(2px);
+    /* backdrop-filter: blur(2px); */
+
+    /* animation-name: floating;
+    animation-duration: 4s;
+    animation-iteration-count: infinite; */
+
+}
+
+#background{
+    z-index: -1000;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-image: url("/images/Game_Field_Background.png");
+
+    animation-name: floating;
+    animation-duration: 4s;
+    animation-iteration-count: infinite;
+}
+
+@keyframes floating{
+    from{
+        filter:hue-rotate(0) blur(1.75px);
+        
+    }
+    25%{
+        filter:hue-rotate(50deg) blur(1px);
+    }
+    50%{
+        
+        filter:hue-rotate(0) blur(1.75px);
+    }
+    75%{
+        filter:hue-rotate(-50deg) blur(1px);
+    }
+    to{
+        filter:hue-rotate(0) blur(1.75px);
+    }
 }
 
 .header {
@@ -29,8 +66,13 @@ body {
 }
 
 .color-theme{
-    background: #241400;
-    color:#ffb23a;
+    background: #241400 !important;
+    color:#ffb23a !important;
+}
+
+.color-theme-border{
+    border: 3px solid #ffb23a;
+    border-radius: 20px;
 }
 #logo {
     width: 40px;

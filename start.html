@@ -11,6 +11,7 @@
 </head>
 
 <body>
+    <div id="background"></div>
     <div class="header color-theme">
         <div class="container-fluid">
             <div class="row align-items-center">
@@ -26,8 +27,43 @@
 
     <div id="main_div">
         <div class="w-100 h-100 d-flex justify-content-center align-items-center">
-            <h2 id="start" class="d-flex justify-content-center align-items-center"
-                onclick="document.location='/index.html'">Start!</h2>
+            <div class="container w-auto color-theme color-theme-border">
+                <div class="form-group row d-flex align-items-center">
+                    <label for="enemyMoveSpeed" class="col-sm-4 col-form-label">Скорость передвижения врагов</label>
+                    <div class="col-sm-8">
+                        <select class="form-control color-theme " id="enemyMoveSpeed">
+                            <option value="1">Низкая</option>
+                            <option value="2">Средняя</option>
+                            <option value="3">Высокая</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group row d-flex align-items-center">
+                    <label for="enemyAttackSpeed" class="col-sm-4 col-form-label">Скорость атаки врагов</label>
+                    <div class="col-sm-8">
+                        <select class="form-control color-theme " id="enemyAttackSpeed">
+                            <option value="1">Низкая</option>
+                            <option value="2">Средняя</option>
+                            <option value="3">Высокая</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group row d-flex align-items-center">
+                    <label for="enemySpawnSpeed" class="col-sm-4 col-form-label">Частота появления врагов</label>
+                    <div class="col-sm-8">
+                        <select class="form-control color-theme " id="enemySpawnSpeed">
+                            <option value="1">Низкая</option>
+                            <option value="2">Средняя</option>
+                            <option value="3">Высокая</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row d-flex align-items-center justify-content-center">
+                    <h2 id="startButton" class="d-flex justify-content-center align-items-center"
+                        onclick="document.location='/index.html'">Start!</h2>
+
+                </div>
+            </div>
         </div>
     </div>
 
@@ -41,7 +77,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-fQybjgWLrvvRgtW6bFlB7jaZrFsaBXjsOMm/tB9LTS58ONXgqbR9W8oWht/amnpF"
         crossorigin="anonymous"></script>
-
+    <script src="/scripts/start.js"></script>
 </body>
 
 </html>
