@@ -10,7 +10,7 @@
     /* background-size: 100%; */
 }
 
-#start:hover {
+#startButton:hover {
     opacity: 80%;
     cursor: pointer;
 }
