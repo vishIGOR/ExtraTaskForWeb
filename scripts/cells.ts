@@ -8,6 +8,14 @@ class Cell {
         this._y = y;
     }
 
+    public get x():number{
+        return this._x;
+    }
+
+    public get y():number{
+        return this._y;
+    }
+
     public getCoordinates = (): [number, number] => {
         return [this._x, this._y]
     }

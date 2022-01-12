@@ -1,4 +1,4 @@
-.enemy1, .player{
+/* .enemy1, .player{
     transition-property: left,top;
     transition-duration: 250ms;
     
@@ -26,4 +26,37 @@
     
     background-size: 100%;
     position: relative;
+} */
+
+
+.width-one{
+    width:60px;
+}
+
+.width-two{
+    width:120px;
+}
+
+.height-one{
+    height:60px;
+}
+
+.height-two{
+    height:120px;
+}
+
+.entity{
+    background-size: 100%;
+    position: relative;
+    
+    transition-property: left,top;
+    transition-duration: 200ms;
+}
+
+.hero{
+    background-image: url(/images/Starships/Hero_Ship.png);
+}
+
+.enemy1{
+    background-image: url(/images/Starships/Enemy_Ship_1.png);
 }
