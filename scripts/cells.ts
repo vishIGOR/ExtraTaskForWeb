@@ -1,7 +1,7 @@
 class Cell {
     private _x: number;
     private _y: number;
-    private _entities: Entity[];
+    private _entities: Entity[] = Array(0);
 
     constructor(x: number, y: number) {
         this._x = x;
@@ -22,6 +22,7 @@ class Cell {
 
     public AddEntity(entity:Entity):void{
         this._entities.push(entity);
+        console.log(this.getCoordinates());
     }
 
     public DeleteEntity(entity:Entity):void{

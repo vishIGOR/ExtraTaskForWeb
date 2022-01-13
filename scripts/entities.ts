@@ -19,13 +19,14 @@ abstract class Entity {
     protected redraw() {
         this._htmlObject.style.left = String(this._cell.x * this._map.cellSize) + "px";
         this._htmlObject.style.top = String(this._cell.y * this._map.cellSize) + "px";
-        console.log(String(this._cell.x * this._map.cellSize) + "px", String(this._cell.y * this._map.cellSize) + "px");
+        // console.log(String(this._cell.x * this._map.cellSize) + "px", String(this._cell.y * this._map.cellSize) + "px");
     }
 
 }
 
 interface IMovable {
     move(x: number, y: number): void;
+    isPossibleToMove(x: number, y: number): boolean;
 }
 
 interface IShotable {
@@ -37,9 +38,21 @@ abstract class Spaceship extends Entity implements IMovable {
     protected _maxHitPoints: number;
     protected _damage: number;
 
+    public isPossibleToMove(x: number, y: number): boolean {
+        if ((this._width + this._cell.x + x > this._map.width) || (this._cell.x + x < 0))
+            return false;
+
+        if ((this._height + this._cell.y + y > this._map.height) || (this._cell.y + y < 0))
+            return false;
+
+        return true;
+    }
+
     public move(x: number, y: number): void {
-        
-        //нужно ограничение на выход за поля  и столкновение
+        if (!this.isPossibleToMove(x,y)) {
+            return;
+        }
+
         for (let i = 0; i < this._width; ++i) {
             for (let j = 0; j < this._height; ++j) {
                 this._map.getCell(this._cell.x + i, this._cell.y + j).DeleteEntity(this);
@@ -58,6 +71,7 @@ abstract class Spaceship extends Entity implements IMovable {
         this._htmlObject.style.top = String(this._cell.y * this._map.cellSize);
 
         this.redraw();
+        //нужно ограничение столкновение - логика разная у разных классов
     }
 
     public damageIt(value: number): void {
@@ -71,6 +85,12 @@ class Hero extends Spaceship implements IShotable {
 
     constructor(map: BattleMap, startCell: Cell) {
         super(map, startCell);
+
+        for (let i = 0; i < this._width; ++i) {
+            for (let j = 0; j < this._height; ++j) {
+                this._map.getCell(this._cell.x + i, this._cell.y + j).AddEntity(this);
+            }
+        }
 
         this._maxHitPoints = 3;
         this._hitPoints = 3;
@@ -109,6 +129,22 @@ class Hero extends Spaceship implements IShotable {
 }
 
 abstract class Enemy extends Spaceship {
+
+    
+    constructor(map: BattleMap, startCell: Cell){
+        super(map,startCell);
+
+    }
+    public move(x: number, y: number): void {
+        if (!this.isPossibleToMove(x,y)) {
+            return;
+        }
+
+        if (this._map.getCell(this._cell.x + x, this._cell.y + y).IsContainsEnemy) {
+            return;
+        }
+        super.move(x, y);
+    }
 }
 
 abstract class Bullet extends Entity {
