@@ -1,7 +1,7 @@
 var Cell = /** @class */ (function () {
     function Cell(x, y) {
         var _this = this;
-        this._entities = Array(0);
+        this._entities = [];
         this.getCoordinates = function () {
             return [_this._x, _this._y];
         };
@@ -22,20 +22,20 @@ var Cell = /** @class */ (function () {
         enumerable: false,
         configurable: true
     });
-    Cell.prototype.AddEntity = function (entity) {
+    Cell.prototype.addEntity = function (entity) {
         this._entities.push(entity);
-        console.log(this.getCoordinates());
     };
-    Cell.prototype.DeleteEntity = function (entity) {
+    Cell.prototype.deleteEntity = function (entity) {
         this._entities.splice(this._entities.indexOf(entity), 1);
     };
     Cell.prototype.IsContainsEnemy = function () {
+        var flag = false;
         this._entities.forEach(function (entity) {
             if (entity instanceof Enemy) {
-                return true;
+                flag = true;
             }
         });
-        return false;
+        return flag;
     };
     return Cell;
 }());

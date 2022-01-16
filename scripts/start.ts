@@ -9,6 +9,8 @@ startButton!.onclick = () =>{
     let enemySpawnSpeedValue = <HTMLInputElement>document.getElementById("enemySpawnSpeed");
     localStorage.setItem("enemySpawnSpeed", enemySpawnSpeedValue.value);
 
-    document.location='/index.html';
+    let numberOfLivesValue = <HTMLInputElement>document.getElementById("numberOfLives");
+    localStorage.setItem("numberOfLives", numberOfLivesValue.value);
     
+    document.location='/index.html';
 }

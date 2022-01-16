@@ -1,32 +1,33 @@
 class BattleMap {
-    private _htmlObject:HTMLElement;
+    private _htmlObject: HTMLElement;
 
     private _height: number;
     private _width: number;
 
-    private _cellSize:number;
+    private _cellSize: number;
 
     private _cells: Cell[][];
-    private _entities: Entity[];
+    private _entities: Entity[] = [];
 
     private _enemyMoveSpeed: string;
     private _enemyAttackSpeed: string;
     private _enemySpawnSpeed: string;
+    private _numberOfLives: string;
 
-    private _points: number;
+    private _enemySpawnCounter = 0;
+    private _enemySpawnBorder;
+
+    private _points: number = 0;
 
     public player: Hero;
 
-    
 
-    
-
-    constructor(sellSize:number) {
+    constructor(sellSize: number) {
         this._htmlObject = document.getElementById("content");
 
         this._cellSize = sellSize;
-        this._height = Math.floor(this.htmlObject.offsetHeight/this._cellSize);
-        this._width =  Math.floor(this.htmlObject.offsetWidth/this._cellSize);
+        this._height = Math.floor(this.htmlObject.offsetHeight / this._cellSize);
+        this._width = Math.floor(this.htmlObject.offsetWidth / this._cellSize);
 
         this._cells = new Array(this._width);
         for (let i = 0; i < this._width; ++i) {
@@ -37,33 +38,77 @@ class BattleMap {
         }
     }
 
-    public get height():number{
+    public get height(): number {
         return this._height;
     }
 
-    public get width():number{
+    public get width(): number {
         return this._width;
     }
 
-    public get cellSize():number{
+    public get cellSize(): number {
         return this._cellSize;
     }
 
-    public get htmlObject():HTMLElement{
+    public get htmlObject(): HTMLElement {
         return this._htmlObject;
+    }
+
+    public get enemyMoveSpeed(): number {
+        return Number(this._enemyMoveSpeed);
+    }
+
+    public get enemyAttackSpeed(): number {
+        return Number(this._enemyAttackSpeed);
+    }
+
+    public get enemySpawnSpeed(): number {
+        return Number(this._enemySpawnSpeed);
+    }
+
+    public get numberOfLives(): number {
+        return Number(this._numberOfLives);
     }
 
     public startGame(): void {
         this._enemyMoveSpeed = localStorage.getItem("enemyMoveSpeed");
         this._enemyAttackSpeed = localStorage.getItem("enemyAttackSpeed");
         this._enemySpawnSpeed = localStorage.getItem("enemySpawnSpeed");
-        
-        
-        this.player = new Hero(this, this._cells[0][this._height-2]);
+        this._numberOfLives = localStorage.getItem("numberOfLives");
+
+        switch (this.enemySpawnSpeed) {
+            case 1:
+                this._enemySpawnBorder = 6;
+                break;
+
+            case 2:
+                this._enemySpawnBorder = 4;
+                break;
+
+            case 3:
+                this._enemySpawnBorder = 2;
+                break;
+        }
+        this.player = new Hero(this, this._cells[0][this._height - 2]);
+
+        this.redrawHitPoints();
     }
 
     public endGame(): void {
+        //логика пересоздания и результатов
+    }
 
+    public redrawHitPoints(): void {
+        document.getElementById("hitPoints").innerText = String(this.player.hitPoints);
+    }
+
+    public increaseScore(value: number): void {
+        this._points += value;
+        this.redrawScore();
+    }
+
+    public redrawScore(): void {
+        document.getElementById("score").innerText = String(this._points);
     }
 
     // public setDifficultyLevel(enemyMS:number,enemyAS:number,enemySS:number){
@@ -84,9 +129,53 @@ class BattleMap {
         this._entities.forEach(entity => {
             entity.chooseAction();
         });
+
+        this._enemySpawnCounter++;
+        if (this._enemySpawnCounter == this._enemySpawnBorder) {
+            this._enemySpawnCounter = 0;
+
+            let cellForEnemy: Cell = this.findCellToAddEnemy();
+            if (cellForEnemy !== null) {
+                this.addRandomEnemy(cellForEnemy);
+            }
+        }
     }
 
-    public DeleteEntity(entity: Entity): void {
+    private findCellToAddEnemy(): Cell {
+        let possibleCells: Cell[] = [];
+        let cellsCounter: number;
+        for (let i = 0; i < this._width - 1; i++) {
+            cellsCounter = 0;
+            for (let x = 0; x < 2; x++) {
+                for (let y = 0; y < 2; y++) {
+                    if (this.getCell(i + x, y).IsContainsEnemy()) {
+
+                        cellsCounter++;
+                    }
+                }
+            }
+            if (cellsCounter === 0) {
+                possibleCells.push(this.getCell(i, 0));
+            }
+        }
+
+        // console.log("//", possibleCells);
+        if (possibleCells.length === 0) {
+            return null;
+        }
+
+        return possibleCells[getRandomInt(0, possibleCells.length)];
+    }
+
+    private addRandomEnemy(startCell: Cell): void {
+        let newEnemy: Enemy;
+
+        newEnemy = new Enemy1(this, startCell);
+
+        this._entities.push(newEnemy);
+    }
+
+    public deleteEntity(entity: Entity): void {
         this._entities.splice(this._entities.indexOf(entity), 1);
     }
 

@@ -1,7 +1,7 @@
 class Cell {
     private _x: number;
     private _y: number;
-    private _entities: Entity[] = Array(0);
+    private _entities: Entity[] = [];
 
     constructor(x: number, y: number) {
         this._x = x;
@@ -20,23 +20,22 @@ class Cell {
         return [this._x, this._y]
     }
 
-    public AddEntity(entity:Entity):void{
+    public addEntity(entity:Entity):void{
         this._entities.push(entity);
-        console.log(this.getCoordinates());
     }
 
-    public DeleteEntity(entity:Entity):void{
+    public deleteEntity(entity:Entity):void{
         this._entities.splice(this._entities.indexOf(entity),1);
     }
 
     public IsContainsEnemy():boolean{
-        
+        let flag:boolean = false;
         this._entities.forEach(entity => {
             if(entity instanceof Enemy){
-                return true;
+                flag = true;
             }
         });
         
-        return false;
+        return flag;
     }
 }

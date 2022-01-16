@@ -37,7 +37,7 @@ function initPlayerControls() {
             battleMap.player.move(1, 0);
             unblockMovingAccess();
         }
-        
+
     };
 
     document.getElementById("arrow_down").onclick = function () {
@@ -70,6 +70,13 @@ let movingAccess: boolean = true;
 let battleMap = new BattleMap(60);
 initPlayerControls();
 battleMap.startGame();
+setInterval(() => {
+    battleMap.updateMap();
+}, 200);
+
+// setTimeout(()=>{
+//     clearInterval(game);
+// }, 1600)
 
 // window.onresize = () => {
 //     battleMap = new BattleMap(60);

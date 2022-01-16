@@ -30,7 +30,7 @@ body {
     background-image: url("/images/Game_Field_Background.png");
 
     animation-name: floating;
-    animation-duration: 4s;
+    animation-duration: 3s;
     animation-iteration-count: infinite;
 }
 

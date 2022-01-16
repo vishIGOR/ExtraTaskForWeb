@@ -57,6 +57,12 @@ var movingAccess = true;
 var battleMap = new BattleMap(60);
 initPlayerControls();
 battleMap.startGame();
+setInterval(function () {
+    battleMap.updateMap();
+}, 200);
+// setTimeout(()=>{
+//     clearInterval(game);
+// }, 1600)
 // window.onresize = () => {
 //     battleMap = new BattleMap(60);
 //     initPlayerControls();

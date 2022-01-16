@@ -1,5 +1,8 @@
 var BattleMap = /** @class */ (function () {
     function BattleMap(sellSize) {
+        this._entities = [];
+        this._enemySpawnCounter = 0;
+        this._points = 0;
         this._htmlObject = document.getElementById("content");
         this._cellSize = sellSize;
         this._height = Math.floor(this.htmlObject.offsetHeight / this._cellSize);
@@ -40,13 +43,65 @@ var BattleMap = /** @class */ (function () {
         enumerable: false,
         configurable: true
     });
+    Object.defineProperty(BattleMap.prototype, "enemyMoveSpeed", {
+        get: function () {
+            return Number(this._enemyMoveSpeed);
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(BattleMap.prototype, "enemyAttackSpeed", {
+        get: function () {
+            return Number(this._enemyAttackSpeed);
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(BattleMap.prototype, "enemySpawnSpeed", {
+        get: function () {
+            return Number(this._enemySpawnSpeed);
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(BattleMap.prototype, "numberOfLives", {
+        get: function () {
+            return Number(this._numberOfLives);
+        },
+        enumerable: false,
+        configurable: true
+    });
     BattleMap.prototype.startGame = function () {
         this._enemyMoveSpeed = localStorage.getItem("enemyMoveSpeed");
         this._enemyAttackSpeed = localStorage.getItem("enemyAttackSpeed");
         this._enemySpawnSpeed = localStorage.getItem("enemySpawnSpeed");
+        this._numberOfLives = localStorage.getItem("numberOfLives");
+        switch (this.enemySpawnSpeed) {
+            case 1:
+                this._enemySpawnBorder = 6;
+                break;
+            case 2:
+                this._enemySpawnBorder = 4;
+                break;
+            case 3:
+                this._enemySpawnBorder = 2;
+                break;
+        }
         this.player = new Hero(this, this._cells[0][this._height - 2]);
+        this.redrawHitPoints();
     };
     BattleMap.prototype.endGame = function () {
+        //логика пересоздания и результатов
+    };
+    BattleMap.prototype.redrawHitPoints = function () {
+        document.getElementById("hitPoints").innerText = String(this.player.hitPoints);
+    };
+    BattleMap.prototype.increaseScore = function (value) {
+        this._points += value;
+        this.redrawScore();
+    };
+    BattleMap.prototype.redrawScore = function () {
+        document.getElementById("score").innerText = String(this._points);
     };
     // public setDifficultyLevel(enemyMS:number,enemyAS:number,enemySS:number){
     //     this.enemyMoveSpeed = enemyMS;
@@ -63,8 +118,43 @@ var BattleMap = /** @class */ (function () {
         this._entities.forEach(function (entity) {
             entity.chooseAction();
         });
+        this._enemySpawnCounter++;
+        if (this._enemySpawnCounter == this._enemySpawnBorder) {
+            this._enemySpawnCounter = 0;
+            var cellForEnemy = this.findCellToAddEnemy();
+            if (cellForEnemy !== null) {
+                this.addRandomEnemy(cellForEnemy);
+            }
+        }
     };
-    BattleMap.prototype.DeleteEntity = function (entity) {
+    BattleMap.prototype.findCellToAddEnemy = function () {
+        var possibleCells = [];
+        var cellsCounter;
+        for (var i = 0; i < this._width - 1; i++) {
+            cellsCounter = 0;
+            for (var x = 0; x < 2; x++) {
+                for (var y = 0; y < 2; y++) {
+                    if (this.getCell(i + x, y).IsContainsEnemy()) {
+                        cellsCounter++;
+                    }
+                }
+            }
+            if (cellsCounter === 0) {
+                possibleCells.push(this.getCell(i, 0));
+            }
+        }
+        // console.log("//", possibleCells);
+        if (possibleCells.length === 0) {
+            return null;
+        }
+        return possibleCells[getRandomInt(0, possibleCells.length)];
+    };
+    BattleMap.prototype.addRandomEnemy = function (startCell) {
+        var newEnemy;
+        newEnemy = new Enemy1(this, startCell);
+        this._entities.push(newEnemy);
+    };
+    BattleMap.prototype.deleteEntity = function (entity) {
         this._entities.splice(this._entities.indexOf(entity), 1);
     };
     return BattleMap;

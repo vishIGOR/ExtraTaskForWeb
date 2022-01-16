@@ -6,5 +6,7 @@ startButton.onclick = function () {
     localStorage.setItem("enemyAttackSpeed", enemyAttackSpeedValue.value);
     var enemySpawnSpeedValue = document.getElementById("enemySpawnSpeed");
     localStorage.setItem("enemySpawnSpeed", enemySpawnSpeedValue.value);
+    var numberOfLivesValue = document.getElementById("numberOfLives");
+    localStorage.setItem("numberOfLives", numberOfLivesValue.value);
     document.location = '/index.html';
 };

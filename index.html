@@ -13,15 +13,19 @@
 
 <body>
     <div id="background"></div>
-    
+
     <div class="header color-theme">
         <div class="container-fluid">
             <div class="row align-items-center">
                 <img src="/images/HITS_Logo.png" id="logo" class="mr-3">
-                <h5 class="mr-2 my-0">HP: </h5>
-                <h5 id="HP" class="mr-3 my-0">100</h5>
-                <h5 class="mr-3 my-0">Score: </h5>
-                <h5 id="score" class="mr-3 my-0">0</h5>
+                <div class="d-flex flex-row">
+                    <h5 class="mr-2 my-0">HP: </h5>
+                    <h5 id="hitPoints" class="mr-3 my-0">0</h5>
+                </div>
+                <div class="d-flex flex-row">
+                    <h5 class="mr-3 my-0">Score: </h5>
+                    <h5 id="score" class="mr-3 my-0">0</h5>
+                </div>
             </div>
         </div>
 
@@ -30,11 +34,11 @@
     <div id="main_div" class="continer-fluid d-flex">
         <div class="row d-flex flex-column flex-md-row w-100 m-0">
             <div id="content" class="col col-md-auto">
-                <!-- <div class="enemy1"></div> -->
+                <!-- поле для объектов -->
             </div>
 
             <div id="sidebar" class="col-md-auto h-auto d-flex justify-content-center align-items-center p-0">
-                <div class="row container-md   justify-content-center d-flex flex-row flex-md-column p-0" >
+                <div class="row container-md   justify-content-center d-flex flex-row flex-md-column p-0">
                     <div class="row-md d-flex justify-content-md-center align-items-center my-4">
                         <div class="col-auto col-md-4">
                             <div id="arrow_top" class="arrow "></div>
