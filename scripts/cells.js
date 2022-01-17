@@ -22,16 +22,32 @@ var Cell = /** @class */ (function () {
         enumerable: false,
         configurable: true
     });
+    Object.defineProperty(Cell.prototype, "entities", {
+        get: function () {
+            return this._entities;
+        },
+        enumerable: false,
+        configurable: true
+    });
     Cell.prototype.addEntity = function (entity) {
         this._entities.push(entity);
     };
     Cell.prototype.deleteEntity = function (entity) {
         this._entities.splice(this._entities.indexOf(entity), 1);
     };
-    Cell.prototype.IsContainsEnemy = function () {
+    Cell.prototype.isContainsEnemy = function () {
         var flag = false;
         this._entities.forEach(function (entity) {
             if (entity instanceof Enemy) {
+                flag = true;
+            }
+        });
+        return flag;
+    };
+    Cell.prototype.isContainsHero = function () {
+        var flag = false;
+        this._entities.forEach(function (entity) {
+            if (entity instanceof Hero) {
                 flag = true;
             }
         });

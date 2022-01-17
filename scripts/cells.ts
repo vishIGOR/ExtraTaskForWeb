@@ -16,6 +16,9 @@ class Cell {
         return this._y;
     }
 
+    public get entities():Entity[]{
+        return this._entities;
+    }
     public getCoordinates = (): [number, number] => {
         return [this._x, this._y]
     }
@@ -28,10 +31,21 @@ class Cell {
         this._entities.splice(this._entities.indexOf(entity),1);
     }
 
-    public IsContainsEnemy():boolean{
+    public isContainsEnemy():boolean{
         let flag:boolean = false;
         this._entities.forEach(entity => {
             if(entity instanceof Enemy){
+                flag = true;
+            }
+        });
+        
+        return flag;
+    }
+
+    public isContainsHero():boolean{
+        let flag:boolean = false;
+        this._entities.forEach(entity => {
+            if(entity instanceof Hero){
                 flag = true;
             }
         });

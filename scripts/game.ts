@@ -23,6 +23,17 @@ function unblockMovingAccess() {
         movingAccess = true;
     }, 200)
 }
+
+function blockAttackAccess() {
+    attackAccess = false;
+}
+
+function unblockAttackAccess() {
+    setTimeout(() => {
+        attackAccess = true;
+    }, 200)
+}
+
 function initPlayerControls() {
     document.getElementById("arrow_top").onclick = function () {
         if (movingAccess) {
@@ -57,8 +68,59 @@ function initPlayerControls() {
     };
 
     document.getElementById("shoot").onclick = function () {
-        battleMap.player.shot();
+        if (attackAccess) {
+            blockAttackAccess();
+            battleMap.player.shot();
+            unblockAttackAccess();
+        }
     };
+
+    document.addEventListener('keydown', function (event) {
+        if (event.code == 'ArrowUp') {
+            if (movingAccess) {
+                blockMovingAccess();
+                battleMap.player.move(0, -1);
+                unblockMovingAccess();
+            }
+            return;
+        }
+
+        if (event.code == 'ArrowRight') {
+            if (movingAccess) {
+                blockMovingAccess();
+                battleMap.player.move(1, 0);
+                unblockMovingAccess();
+            }
+            return;
+        }
+
+        if (event.code == 'ArrowDown') {
+            if (movingAccess) {
+                blockMovingAccess();
+                battleMap.player.move(0, 1);
+                unblockMovingAccess();
+            }
+            return;
+        }
+
+        if (event.code == 'ArrowLeft') {
+            if (movingAccess) {
+                blockMovingAccess();
+                battleMap.player.move(-1, 0);
+                unblockMovingAccess();
+            }
+            return;
+        }
+
+        if (event.code == 'Space') {
+            if (attackAccess) {
+                blockAttackAccess();
+                battleMap.player.shot();
+                unblockAttackAccess();
+            }
+            return;
+        }
+    })
 
 }
 
@@ -67,12 +129,13 @@ function getRandomInt(min: number, max: number): number {
 }
 
 let movingAccess: boolean = true;
+let attackAccess: boolean = true;
 let battleMap = new BattleMap(60);
 initPlayerControls();
 battleMap.startGame();
 setInterval(() => {
     battleMap.updateMap();
-}, 200);
+}, 100);
 
 // setTimeout(()=>{
 //     clearInterval(game);

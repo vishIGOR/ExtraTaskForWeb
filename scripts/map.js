@@ -1,6 +1,8 @@
 var BattleMap = /** @class */ (function () {
     function BattleMap(sellSize) {
         this._entities = [];
+        this._enemies = [];
+        this._bullets = [];
         this._enemySpawnCounter = 0;
         this._points = 0;
         this._htmlObject = document.getElementById("content");
@@ -78,13 +80,13 @@ var BattleMap = /** @class */ (function () {
         this._numberOfLives = localStorage.getItem("numberOfLives");
         switch (this.enemySpawnSpeed) {
             case 1:
-                this._enemySpawnBorder = 6;
+                this._enemySpawnBorder = 11;
                 break;
             case 2:
-                this._enemySpawnBorder = 4;
+                this._enemySpawnBorder = 8;
                 break;
             case 3:
-                this._enemySpawnBorder = 2;
+                this._enemySpawnBorder = 5;
                 break;
         }
         this.player = new Hero(this, this._cells[0][this._height - 2]);
@@ -116,7 +118,13 @@ var BattleMap = /** @class */ (function () {
     };
     BattleMap.prototype.updateMap = function () {
         this._entities.forEach(function (entity) {
-            entity.chooseAction();
+            entity.chooseAction(1);
+        });
+        this._bullets.forEach(function (bullet) {
+            bullet.chooseAction(2);
+        });
+        this._enemies.forEach(function (enemy) {
+            enemy.chooseAction(2);
         });
         this._enemySpawnCounter++;
         if (this._enemySpawnCounter == this._enemySpawnBorder) {
@@ -134,7 +142,7 @@ var BattleMap = /** @class */ (function () {
             cellsCounter = 0;
             for (var x = 0; x < 2; x++) {
                 for (var y = 0; y < 2; y++) {
-                    if (this.getCell(i + x, y).IsContainsEnemy()) {
+                    if (this.getCell(i + x, y).isContainsEnemy()) {
                         cellsCounter++;
                     }
                 }
@@ -152,10 +160,21 @@ var BattleMap = /** @class */ (function () {
     BattleMap.prototype.addRandomEnemy = function (startCell) {
         var newEnemy;
         newEnemy = new Enemy1(this, startCell);
+        this._enemies.push(newEnemy);
         this._entities.push(newEnemy);
     };
     BattleMap.prototype.deleteEntity = function (entity) {
+        if (entity instanceof Enemy) {
+            this._enemies.splice(this._enemies.indexOf(entity), 1);
+        }
+        if (entity instanceof Bullet) {
+            this._bullets.splice(this._bullets.indexOf(entity), 1);
+        }
         this._entities.splice(this._entities.indexOf(entity), 1);
+    };
+    BattleMap.prototype.addBullet = function (bullet) {
+        this._entities.push(bullet);
+        this._bullets.push(bullet);
     };
     return BattleMap;
 }());

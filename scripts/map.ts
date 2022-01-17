@@ -8,6 +8,9 @@ class BattleMap {
 
     private _cells: Cell[][];
     private _entities: Entity[] = [];
+    private _enemies: Enemy[] = [];
+    private _bullets: Bullet[] = [];
+    // private _explosions: Explosion[] = [];
 
     private _enemyMoveSpeed: string;
     private _enemyAttackSpeed: string;
@@ -78,15 +81,15 @@ class BattleMap {
 
         switch (this.enemySpawnSpeed) {
             case 1:
-                this._enemySpawnBorder = 6;
+                this._enemySpawnBorder = 11;
                 break;
 
             case 2:
-                this._enemySpawnBorder = 4;
+                this._enemySpawnBorder = 8;
                 break;
 
             case 3:
-                this._enemySpawnBorder = 2;
+                this._enemySpawnBorder = 5;
                 break;
         }
         this.player = new Hero(this, this._cells[0][this._height - 2]);
@@ -127,7 +130,15 @@ class BattleMap {
 
     public updateMap(): void {
         this._entities.forEach(entity => {
-            entity.chooseAction();
+            entity.chooseAction(1);
+        });
+
+        this._bullets.forEach(bullet => {
+            bullet.chooseAction(2);
+        });
+
+        this._enemies.forEach(enemy => {
+            enemy.chooseAction(2);
         });
 
         this._enemySpawnCounter++;
@@ -148,7 +159,7 @@ class BattleMap {
             cellsCounter = 0;
             for (let x = 0; x < 2; x++) {
                 for (let y = 0; y < 2; y++) {
-                    if (this.getCell(i + x, y).IsContainsEnemy()) {
+                    if (this.getCell(i + x, y).isContainsEnemy()) {
 
                         cellsCounter++;
                     }
@@ -172,11 +183,24 @@ class BattleMap {
 
         newEnemy = new Enemy1(this, startCell);
 
+        this._enemies.push(newEnemy);
         this._entities.push(newEnemy);
     }
 
     public deleteEntity(entity: Entity): void {
+        if (entity instanceof Enemy) {
+            this._enemies.splice(this._enemies.indexOf(entity), 1);
+        }
+
+        if (entity instanceof Bullet) {
+            this._bullets.splice(this._bullets.indexOf(entity), 1);
+        }
+
         this._entities.splice(this._entities.indexOf(entity), 1);
     }
 
+    public addBullet(bullet: Bullet): void {
+        this._entities.push(bullet);
+        this._bullets.push(bullet);
+    }
 }
