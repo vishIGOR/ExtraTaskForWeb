@@ -3,8 +3,13 @@ var BattleMap = /** @class */ (function () {
         this._entities = [];
         this._enemies = [];
         this._bullets = [];
+        this._bonuses = [];
         this._enemySpawnCounter = 0;
         this._points = 0;
+        this._movingAccess = true;
+        this._attackAccess = true;
+        this._movingBlockDuration = 200;
+        this._attackBlockDuration = 300;
         this._htmlObject = document.getElementById("content");
         this._cellSize = sellSize;
         this._height = Math.floor(this.htmlObject.offsetHeight / this._cellSize);
@@ -16,7 +21,45 @@ var BattleMap = /** @class */ (function () {
                 this._cells[i][j] = new Cell(i, j);
             }
         }
+        this.initPlayerControls();
+        this._isGameOn = true;
+        this._enemyMoveSpeed = localStorage.getItem("enemyMoveSpeed");
+        this._enemyAttackSpeed = localStorage.getItem("enemyAttackSpeed");
+        this._enemySpawnSpeed = localStorage.getItem("enemySpawnSpeed");
+        this._numberOfLives = localStorage.getItem("numberOfLives");
+        switch (this.enemySpawnSpeed) {
+            case 1:
+                this._enemySpawnBorder = 11;
+                break;
+            case 2:
+                this._enemySpawnBorder = 8;
+                break;
+            case 3:
+                this._enemySpawnBorder = 5;
+                break;
+        }
+        this.player = new Hero(this, this._cells[0][this._height - 2]);
+        this.redrawHitPoints();
+        this.updateMap();
     }
+    BattleMap.prototype.blockMovingAccess = function () {
+        this._movingAccess = false;
+    };
+    BattleMap.prototype.unblockMovingAccess = function () {
+        var _this = this;
+        setTimeout(function () {
+            _this._movingAccess = true;
+        }, this._movingBlockDuration);
+    };
+    BattleMap.prototype.blockAttackAccess = function () {
+        this._attackAccess = false;
+    };
+    BattleMap.prototype.unblockAttackAccess = function () {
+        var _this = this;
+        setTimeout(function () {
+            _this._attackAccess = true;
+        }, this._attackBlockDuration);
+    };
     Object.defineProperty(BattleMap.prototype, "height", {
         get: function () {
             return this._height;
@@ -73,25 +116,6 @@ var BattleMap = /** @class */ (function () {
         enumerable: false,
         configurable: true
     });
-    BattleMap.prototype.startGame = function () {
-        this._enemyMoveSpeed = localStorage.getItem("enemyMoveSpeed");
-        this._enemyAttackSpeed = localStorage.getItem("enemyAttackSpeed");
-        this._enemySpawnSpeed = localStorage.getItem("enemySpawnSpeed");
-        this._numberOfLives = localStorage.getItem("numberOfLives");
-        switch (this.enemySpawnSpeed) {
-            case 1:
-                this._enemySpawnBorder = 11;
-                break;
-            case 2:
-                this._enemySpawnBorder = 8;
-                break;
-            case 3:
-                this._enemySpawnBorder = 5;
-                break;
-        }
-        this.player = new Hero(this, this._cells[0][this._height - 2]);
-        this.redrawHitPoints();
-    };
     BattleMap.prototype.endGame = function () {
         //логика пересоздания и результатов
     };
@@ -117,6 +141,7 @@ var BattleMap = /** @class */ (function () {
         return this._cells[x][y];
     };
     BattleMap.prototype.updateMap = function () {
+        var _this = this;
         this._entities.forEach(function (entity) {
             entity.chooseAction(1);
         });
@@ -133,6 +158,11 @@ var BattleMap = /** @class */ (function () {
             if (cellForEnemy !== null) {
                 this.addRandomEnemy(cellForEnemy);
             }
+        }
+        if (this._isGameOn) {
+            setTimeout(function () {
+                _this.updateMap();
+            }, 100);
         }
     };
     BattleMap.prototype.findCellToAddEnemy = function () {
@@ -159,22 +189,126 @@ var BattleMap = /** @class */ (function () {
     };
     BattleMap.prototype.addRandomEnemy = function (startCell) {
         var newEnemy;
-        newEnemy = new Enemy1(this, startCell);
+        var randomInt = getRandomInt(0, 4);
+        if (randomInt === 0) {
+            newEnemy = new Enemy1(this, startCell);
+            this._enemies.push(newEnemy);
+            this._entities.push(newEnemy);
+            return;
+        }
+        if (randomInt === 1) {
+            newEnemy = new Enemy2(this, startCell);
+            this._enemies.push(newEnemy);
+            this._entities.push(newEnemy);
+            return;
+        }
+        if (randomInt === 2) {
+            newEnemy = new Enemy3(this, startCell);
+            this._enemies.push(newEnemy);
+            this._entities.push(newEnemy);
+            return;
+        }
+        newEnemy = new Enemy4(this, startCell);
         this._enemies.push(newEnemy);
         this._entities.push(newEnemy);
     };
     BattleMap.prototype.deleteEntity = function (entity) {
+        this._entities.splice(this._entities.indexOf(entity), 1);
         if (entity instanceof Enemy) {
             this._enemies.splice(this._enemies.indexOf(entity), 1);
+            return;
         }
         if (entity instanceof Bullet) {
             this._bullets.splice(this._bullets.indexOf(entity), 1);
+            return;
         }
-        this._entities.splice(this._entities.indexOf(entity), 1);
+        if (entity instanceof Bonus) {
+            this._bonuses.splice(this._bonuses.indexOf(entity), 1);
+            return;
+        }
     };
     BattleMap.prototype.addBullet = function (bullet) {
         this._entities.push(bullet);
         this._bullets.push(bullet);
+    };
+    BattleMap.prototype.initPlayerControls = function () {
+        document.getElementById("arrow_top").onclick = function () {
+            if (battleMap._movingAccess) {
+                battleMap.blockMovingAccess();
+                battleMap.player.move(0, -1);
+                battleMap.unblockMovingAccess();
+            }
+        };
+        document.getElementById("arrow_right").onclick = function () {
+            if (battleMap._movingAccess) {
+                battleMap.blockMovingAccess();
+                battleMap.player.move(1, 0);
+                battleMap.unblockMovingAccess();
+            }
+        };
+        document.getElementById("arrow_down").onclick = function () {
+            if (battleMap._movingAccess) {
+                battleMap.blockMovingAccess();
+                battleMap.player.move(0, 1);
+                battleMap.unblockMovingAccess();
+            }
+        };
+        document.getElementById("arrow_left").onclick = function () {
+            if (battleMap._movingAccess) {
+                battleMap.blockMovingAccess();
+                battleMap.player.move(-1, 0);
+                battleMap.unblockMovingAccess();
+            }
+        };
+        document.getElementById("shoot").onclick = function () {
+            if (battleMap._attackAccess) {
+                battleMap.blockAttackAccess();
+                battleMap.player.shot();
+                battleMap.unblockAttackAccess();
+            }
+        };
+        document.addEventListener('keydown', function (event) {
+            if (event.code == 'ArrowUp') {
+                if (battleMap._movingAccess) {
+                    battleMap.blockMovingAccess();
+                    battleMap.player.move(0, -1);
+                    battleMap.unblockMovingAccess();
+                }
+                return;
+            }
+            if (event.code == 'ArrowRight') {
+                if (battleMap._movingAccess) {
+                    battleMap.blockMovingAccess();
+                    battleMap.player.move(1, 0);
+                    battleMap.unblockMovingAccess();
+                }
+                return;
+            }
+            if (event.code == 'ArrowDown') {
+                if (battleMap._movingAccess) {
+                    battleMap.blockMovingAccess();
+                    battleMap.player.move(0, 1);
+                    battleMap.unblockMovingAccess();
+                }
+                return;
+            }
+            if (event.code == 'ArrowLeft') {
+                if (battleMap._movingAccess) {
+                    battleMap.blockMovingAccess();
+                    battleMap.player.move(-1, 0);
+                    battleMap.unblockMovingAccess();
+                }
+                return;
+            }
+            if (event.code == 'Space') {
+                if (battleMap._attackAccess) {
+                    battleMap.blockAttackAccess();
+                    battleMap.player.shot();
+                    battleMap.unblockAttackAccess();
+                }
+                return;
+            }
+        });
     };
     return BattleMap;
 }());

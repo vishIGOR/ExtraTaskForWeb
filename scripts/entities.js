@@ -36,6 +36,9 @@ var Entity = /** @class */ (function () {
         this._htmlObject.style.left = String(this._cell.x * this._map.cellSize) + "px";
         this._htmlObject.style.top = String(this._cell.y * this._map.cellSize) + "px";
     };
+    Entity.prototype.endGame = function () {
+        this.die();
+    };
     return Entity;
 }());
 var Spaceship = /** @class */ (function (_super) {
@@ -109,20 +112,12 @@ var Hero = /** @class */ (function (_super) {
     };
     Hero.prototype.chooseAction = function () {
     };
-    // public move(x: number, y: number): void {
-    //     this._cell.deleteEntity(this);
-    //     this._cell = this._map.getCell(this._cell.x, this._cell.y);
-    //     //нужно ограничение на выход за поля  и столкновение
-    //     this._cell.addEntity(this);
-    //     this._htmlObject.style.left = String(this._cell.x * this._map.cellSize);
-    //     this._htmlObject.style.top = String(this._cell.y * this._map.cellSize);
-    //     this.redraw();
-    // }
     Hero.prototype.shot = function () {
         var newBullet = new HeroBullet(this._map, this._map.getCell(this._cell.x, this._cell.y - 1));
         this._map.addBullet(newBullet);
     };
     Hero.prototype.die = function () {
+        this._map.endGame();
     };
     return Hero;
 }(Spaceship));
@@ -131,6 +126,7 @@ var Enemy = /** @class */ (function (_super) {
     function Enemy() {
         var _this = _super !== null && _super.apply(this, arguments) || this;
         _this._moveCounter = 0;
+        _this._explosionType = String(getRandomInt(1, 4));
         return _this;
     }
     Enemy.prototype.isPossibleToMove = function (x, y) {
@@ -150,7 +146,12 @@ var Enemy = /** @class */ (function (_super) {
         return true;
     };
     Enemy.prototype.die = function () {
-        this._htmlObject.parentElement.removeChild(this._htmlObject);
+        this._htmlObject.classList.add("dying");
+        var dyingHtmlObject = this._htmlObject;
+        setTimeout(function () {
+            dyingHtmlObject.parentElement.removeChild(dyingHtmlObject);
+        }, 300);
+        // this._htmlObject.parentElement.removeChild(this._htmlObject);
         for (var i = 0; i < this._width; ++i) {
             for (var j = 0; j < this._height; ++j) {
                 this._map.getCell(this._cell.x + i, this._cell.y + j).deleteEntity(this);
@@ -167,17 +168,16 @@ var ShootingEnemy = /** @class */ (function (_super) {
     function ShootingEnemy() {
         var _this = _super !== null && _super.apply(this, arguments) || this;
         _this._attackCounter = 0;
-        _this._explosionType = "1";
         return _this;
     }
     ShootingEnemy.prototype.chooseAction = function (stage) {
         if (stage === 1) {
             this._moveCounter++;
-            if (this._moveCounter === this._moveBorder) {
+            if (this._moveCounter >= this._moveBorder) {
                 this._moveCounter = 0;
                 var possibleCells = [];
                 for (var i = -1; i < 2; i++) {
-                    for (var j = -1; j < 2; j++) {
+                    for (var j = 0; j < 2; j++) {
                         if ((i + j) % 2 === 0) {
                             continue;
                         }
@@ -195,14 +195,23 @@ var ShootingEnemy = /** @class */ (function (_super) {
         }
         //stage === 2
         this._attackCounter++;
-        if (this._attackCounter === this._attackBorder) {
+        if (this._attackCounter >= this._attackBorder && this.isPossibleToShot()) {
             this._attackCounter = 0;
             this.shot();
         }
     };
-    ShootingEnemy.prototype.shot = function () {
-        var newBullet = new Enemy1Bullet(this._map, this._map.getCell(this._cell.x, this._cell.y + 2));
-        this._map.addBullet(newBullet);
+    ShootingEnemy.prototype.isPossibleToShot = function () {
+        if (this._cell.y + this._height > this._map.height) {
+            return false;
+        }
+        for (var i = this._cell.y + this._height; i < this._map.height; i++) {
+            for (var j = 0; j < this._width; j++) {
+                if (this._map.getCell(this._cell.x + j, i).isContainsEnemy()) {
+                    return false;
+                }
+            }
+        }
+        return true;
     };
     return ShootingEnemy;
 }(Enemy));
@@ -235,6 +244,55 @@ var Enemy1 = /** @class */ (function (_super) {
         }
         switch (_this._map.enemyAttackSpeed) {
             case 1:
+                _this._attackBorder = 22;
+                break;
+            case 2:
+                _this._attackBorder = 15;
+                break;
+            case 3:
+                _this._attackBorder = 11;
+                break;
+        }
+        _this._attackCounter = _this._attackBorder;
+        _this._moveCounter = _this._moveBorder;
+        _this.takeCells();
+        return _this;
+    }
+    Enemy1.prototype.shot = function () {
+        var newBullet = new Enemy1Bullet(this._map, this._map.getCell(this._cell.x, this._cell.y + 2));
+        this._map.addBullet(newBullet);
+    };
+    return Enemy1;
+}(ShootingEnemy));
+var Enemy2 = /** @class */ (function (_super) {
+    __extends(Enemy2, _super);
+    function Enemy2(map, startCell) {
+        var _this = _super.call(this, map, startCell) || this;
+        _this._height = 2;
+        _this._width = 2;
+        _this._maxHitPoints = 3;
+        _this._hitPoints = 3;
+        _this._reward = 30;
+        _this._htmlObject = document.createElement("div");
+        _this._htmlObject.classList.add("entity");
+        _this._htmlObject.classList.add("enemy2");
+        _this._htmlObject.classList.add("width-two");
+        _this._htmlObject.classList.add("height-two");
+        _this._map.htmlObject.append(_this._htmlObject);
+        _this.redraw();
+        switch (_this._map.enemyMoveSpeed) {
+            case 1:
+                _this._moveBorder = 24;
+                break;
+            case 2:
+                _this._moveBorder = 18;
+                break;
+            case 3:
+                _this._moveBorder = 11;
+                break;
+        }
+        switch (_this._map.enemyAttackSpeed) {
+            case 1:
                 _this._attackBorder = 26;
                 break;
             case 2:
@@ -244,20 +302,122 @@ var Enemy1 = /** @class */ (function (_super) {
                 _this._attackBorder = 12;
                 break;
         }
+        _this._attackCounter = _this._attackBorder;
+        _this._moveCounter = _this._moveBorder;
         _this.takeCells();
         return _this;
     }
-    return Enemy1;
-}(ShootingEnemy));
-var KamikazeEnemy = /** @class */ (function (_super) {
-    __extends(KamikazeEnemy, _super);
-    function KamikazeEnemy() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    KamikazeEnemy.prototype.chooseAction = function (stage) {
+    Enemy2.prototype.shot = function () {
+        var newBullet = new Enemy2Bullet(this._map, this._map.getCell(this._cell.x, this._cell.y + 2));
+        this._map.addBullet(newBullet);
     };
-    return KamikazeEnemy;
-}(Enemy));
+    return Enemy2;
+}(ShootingEnemy));
+var Enemy3 = /** @class */ (function (_super) {
+    __extends(Enemy3, _super);
+    function Enemy3(map, startCell) {
+        var _this = _super.call(this, map, startCell) || this;
+        _this._height = 1;
+        _this._width = 2;
+        _this._maxHitPoints = 2;
+        _this._hitPoints = 2;
+        _this._reward = 30;
+        _this._htmlObject = document.createElement("div");
+        _this._htmlObject.classList.add("entity");
+        _this._htmlObject.classList.add("enemy3");
+        _this._htmlObject.classList.add("width-two");
+        _this._htmlObject.classList.add("height-one");
+        _this._map.htmlObject.append(_this._htmlObject);
+        _this.redraw();
+        switch (_this._map.enemyMoveSpeed) {
+            case 1:
+                _this._moveBorder = 16;
+                break;
+            case 2:
+                _this._moveBorder = 12;
+                break;
+            case 3:
+                _this._moveBorder = 7;
+                break;
+        }
+        switch (_this._map.enemyAttackSpeed) {
+            case 1:
+                _this._attackBorder = 22;
+                break;
+            case 2:
+                _this._attackBorder = 15;
+                break;
+            case 3:
+                _this._attackBorder = 11;
+                break;
+        }
+        _this._attackCounter = _this._attackBorder;
+        _this._moveCounter = _this._moveBorder;
+        _this.takeCells();
+        return _this;
+    }
+    Enemy3.prototype.shot = function () {
+        var newBullet = new Enemy3Bullet(this._map, this._map.getCell(this._cell.x, this._cell.y + 1));
+        var newBullet2 = new Enemy3Bullet(this._map, this._map.getCell(this._cell.x + 1, this._cell.y + 1));
+        this._map.addBullet(newBullet);
+        this._map.addBullet(newBullet2);
+    };
+    return Enemy3;
+}(ShootingEnemy));
+var Enemy4 = /** @class */ (function (_super) {
+    __extends(Enemy4, _super);
+    function Enemy4(map, startCell) {
+        var _this = _super.call(this, map, startCell) || this;
+        _this._height = 1;
+        _this._width = 1;
+        _this._maxHitPoints = 1;
+        _this._hitPoints = 1;
+        _this._reward = 15;
+        _this._htmlObject = document.createElement("div");
+        _this._htmlObject.classList.add("entity");
+        _this._htmlObject.classList.add("enemy4");
+        _this._htmlObject.classList.add("width-one");
+        _this._htmlObject.classList.add("height-one");
+        _this._map.htmlObject.append(_this._htmlObject);
+        _this.redraw();
+        switch (_this._map.enemyMoveSpeed) {
+            case 1:
+                _this._moveBorder = 12;
+                break;
+            case 2:
+                _this._moveBorder = 8;
+                break;
+            case 3:
+                _this._moveBorder = 4;
+                break;
+        }
+        switch (_this._map.enemyAttackSpeed) {
+            case 1:
+                _this._attackBorder = 18;
+                break;
+            case 2:
+                _this._attackBorder = 13;
+                break;
+            case 3:
+                _this._attackBorder = 10;
+                break;
+        }
+        _this._attackCounter = _this._attackBorder;
+        _this._moveCounter = _this._moveBorder;
+        _this.takeCells();
+        return _this;
+    }
+    Enemy4.prototype.shot = function () {
+        var newBullet = new Enemy4Bullet(this._map, this._map.getCell(this._cell.x, this._cell.y + 1));
+        this._map.addBullet(newBullet);
+    };
+    return Enemy4;
+}(ShootingEnemy));
+// abstract class KamikazeEnemy extends Enemy {
+//     public chooseAction(stage: number): void {
+//? в реализации отказано
+//     }
+// }
 var Bullet = /** @class */ (function (_super) {
     __extends(Bullet, _super);
     function Bullet() {
@@ -310,7 +470,7 @@ var MovingBullet = /** @class */ (function (_super) {
     MovingBullet.prototype.chooseAction = function (stage) {
         if (stage === 1) {
             this._moveCounter++;
-            if (this._moveCounter === this._moveBorder) {
+            if (this._moveCounter >= this._moveBorder) {
                 this._moveCounter = 0;
                 if (this.isPossibleToMove(this._directionX, this._directionY)) {
                     this.move(this._directionX, this._directionY);
@@ -325,6 +485,56 @@ var MovingBullet = /** @class */ (function (_super) {
     };
     return MovingBullet;
 }(Bullet));
+var RayBullet = /** @class */ (function (_super) {
+    __extends(RayBullet, _super);
+    function RayBullet() {
+        var _this = _super !== null && _super.apply(this, arguments) || this;
+        _this._explosionCounter = 0;
+        return _this;
+    }
+    RayBullet.prototype.chooseAction = function (stage) {
+        if (stage === 1) {
+            return;
+        }
+        this._explosionCounter++;
+        if (this._explosionCounter >= this._explosionBorder) {
+            this.isHitTarget();
+            this.die();
+        }
+    };
+    RayBullet.prototype.isHitTarget = function () {
+        for (var i = this._cell.y; i < this._map.height; i++) {
+            for (var j = 0; j < this._width; j++) {
+                if (this._map.getCell(this._cell.x + j, i).isContainsHero()) {
+                    this._map.player.getDamage(this.damageValue);
+                    return;
+                }
+            }
+        }
+    };
+    return RayBullet;
+}(Bullet));
+var Enemy2Bullet = /** @class */ (function (_super) {
+    __extends(Enemy2Bullet, _super);
+    function Enemy2Bullet(map, cell) {
+        var _this = _super.call(this, map, cell) || this;
+        _this._width = 2;
+        _this._explosionBorder = 10;
+        _this.damageValue = 2;
+        _this._htmlObject = document.createElement("div");
+        _this._htmlObject.classList.add("entity");
+        _this._htmlObject.classList.add("bullet-enemy2");
+        _this._htmlObject.classList.add("width-two");
+        _this._htmlObject.classList.add("shot-ray");
+        _this._height = _this._map.height - _this._cell.y;
+        _this._htmlObject.style.height = String(_this._height * _this._map.cellSize) + "px";
+        _this._map.htmlObject.append(_this._htmlObject);
+        _this.redraw();
+        _this.takeCells();
+        return _this;
+    }
+    return Enemy2Bullet;
+}(RayBullet));
 var HeroBullet = /** @class */ (function (_super) {
     __extends(HeroBullet, _super);
     function HeroBullet(map, startCell) {
@@ -377,7 +587,7 @@ var Enemy1Bullet = /** @class */ (function (_super) {
         var _this = _super.call(this, map, startCell) || this;
         _this._width = 1;
         _this._height = 1;
-        _this._moveBorder = 1;
+        _this._moveBorder = 3;
         _this.damageValue = 1;
         _this._htmlObject = document.createElement("div");
         _this._htmlObject.classList.add("entity");
@@ -392,6 +602,50 @@ var Enemy1Bullet = /** @class */ (function (_super) {
         return _this;
     }
     return Enemy1Bullet;
+}(EnemyMovingBullet));
+var Enemy4Bullet = /** @class */ (function (_super) {
+    __extends(Enemy4Bullet, _super);
+    function Enemy4Bullet(map, startCell) {
+        var _this = _super.call(this, map, startCell) || this;
+        _this._width = 1;
+        _this._height = 1;
+        _this._moveBorder = 2;
+        _this.damageValue = 1;
+        _this._htmlObject = document.createElement("div");
+        _this._htmlObject.classList.add("entity");
+        _this._htmlObject.classList.add("bullet-enemy4");
+        _this._htmlObject.classList.add("width-one");
+        _this._htmlObject.classList.add("height-one");
+        _this._map.htmlObject.append(_this._htmlObject);
+        _this.redraw();
+        _this.takeCells();
+        _this._directionX = 0;
+        _this._directionY = 1;
+        return _this;
+    }
+    return Enemy4Bullet;
+}(EnemyMovingBullet));
+var Enemy3Bullet = /** @class */ (function (_super) {
+    __extends(Enemy3Bullet, _super);
+    function Enemy3Bullet(map, startCell) {
+        var _this = _super.call(this, map, startCell) || this;
+        _this._width = 1;
+        _this._height = 1;
+        _this._moveBorder = 1;
+        _this.damageValue = 1;
+        _this._htmlObject = document.createElement("div");
+        _this._htmlObject.classList.add("entity");
+        _this._htmlObject.classList.add("bullet-enemy3");
+        _this._htmlObject.classList.add("width-one");
+        _this._htmlObject.classList.add("height-one");
+        _this._map.htmlObject.append(_this._htmlObject);
+        _this.redraw();
+        _this.takeCells();
+        _this._directionX = 0;
+        _this._directionY = 1;
+        return _this;
+    }
+    return Enemy3Bullet;
 }(EnemyMovingBullet));
 var Explosion = /** @class */ (function () {
     function Explosion(map, cell, type) {
@@ -410,3 +664,32 @@ var Explosion = /** @class */ (function () {
     }
     return Explosion;
 }());
+var Bonus = /** @class */ (function (_super) {
+    __extends(Bonus, _super);
+    function Bonus() {
+        var _this = _super !== null && _super.apply(this, arguments) || this;
+        _this._dyingCounter = 0;
+        return _this;
+    }
+    Bonus.prototype.chooseAction = function (stage) {
+        if (stage === 1) {
+            this._dyingCounter++;
+            if (this._dyingCounter >= this._dyingBorder) {
+                this.die();
+            }
+        }
+    };
+    Bonus.prototype.die = function () {
+        this._htmlObject.parentElement.removeChild(this._htmlObject);
+        for (var i = 0; i < this._width; ++i) {
+            for (var j = 0; j < this._height; ++j) {
+                this._map.getCell(this._cell.x + i, this._cell.y + j).deleteEntity(this);
+            }
+        }
+        this._map.deleteEntity(this);
+    };
+    return Bonus;
+}(Entity));
+// class HealthBonus extends Bonus{
+//! здесь закончили
+// }

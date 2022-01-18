@@ -14,7 +14,7 @@ abstract class Entity {
     }
     public abstract chooseAction(stage: number): void;
 
-    public takeCells(): void {
+    protected takeCells(): void {
         for (let i = 0; i < this._width; ++i) {
             for (let j = 0; j < this._height; ++j) {
                 this._map.getCell(this._cell.x + i, this._cell.y + j).addEntity(this);
@@ -22,7 +22,7 @@ abstract class Entity {
         }
     }
 
-    public leaveCells(): void {
+    protected leaveCells(): void {
         for (let i = 0; i < this._width; ++i) {
             for (let j = 0; j < this._height; ++j) {
                 this._map.getCell(this._cell.x + i, this._cell.y + j).deleteEntity(this);
@@ -36,8 +36,10 @@ abstract class Entity {
 
     }
 
-    public abstract die(): void;
-
+    protected abstract die(): void;
+    public endGame() {
+        this.die();
+    }
 }
 
 interface IMovable {
@@ -138,17 +140,6 @@ class Hero extends Spaceship implements IShotable {
 
     }
 
-    // public move(x: number, y: number): void {
-    //     this._cell.deleteEntity(this);
-    //     this._cell = this._map.getCell(this._cell.x, this._cell.y);
-    //     //нужно ограничение на выход за поля  и столкновение
-    //     this._cell.addEntity(this);
-
-    //     this._htmlObject.style.left = String(this._cell.x * this._map.cellSize);
-    //     this._htmlObject.style.top = String(this._cell.y * this._map.cellSize);
-
-    //     this.redraw();
-    // }
 
     public shot(): void {
         let newBullet: HeroBullet = new HeroBullet(this._map, this._map.getCell(this._cell.x, this._cell.y - 1));
@@ -156,7 +147,7 @@ class Hero extends Spaceship implements IShotable {
     }
 
     die(): void {
-
+        this._map.endGame();
     }
 }
 
@@ -164,6 +155,7 @@ abstract class Enemy extends Spaceship {
     _moveCounter: number = 0;
     _moveBorder: number;
     _reward: number;
+    _explosionType = String(getRandomInt(1, 4));
 
 
 
@@ -187,8 +179,15 @@ abstract class Enemy extends Spaceship {
         return true;
     }
 
-    public die(): void {
-        this._htmlObject.parentElement.removeChild(this._htmlObject);
+    protected die(): void {
+        this._htmlObject.classList.add("dying");
+
+        let dyingHtmlObject = this._htmlObject;
+        setTimeout(() => {
+            dyingHtmlObject.parentElement.removeChild(dyingHtmlObject);
+        }, 300)
+
+        // this._htmlObject.parentElement.removeChild(this._htmlObject);
         for (let i = 0; i < this._width; ++i) {
             for (let j = 0; j < this._height; ++j) {
                 this._map.getCell(this._cell.x + i, this._cell.y + j).deleteEntity(this);
@@ -196,25 +195,24 @@ abstract class Enemy extends Spaceship {
         }
         this._map.increaseScore(this._reward);
         this._map.deleteEntity(this);
-        let explosion:Explosion = new Explosion(this._map,this._cell,this._explosionType);
+        let explosion: Explosion = new Explosion(this._map, this._cell, this._explosionType);
     }
 }
 
 abstract class ShootingEnemy extends Enemy implements IShotable {
     _attackCounter: number = 0;
     _attackBorder: number;
-    _explosionType = "1";
 
 
     public chooseAction(stage: number): void {
         if (stage === 1) {
             this._moveCounter++;
-            if (this._moveCounter === this._moveBorder) {
+            if (this._moveCounter >= this._moveBorder) {
                 this._moveCounter = 0;
 
                 let possibleCells: Cell[] = [];
                 for (let i = -1; i < 2; i++) {
-                    for (let j = -1; j < 2; j++) {
+                    for (let j = 0; j < 2; j++) {
                         if ((i + j) % 2 === 0) {
                             continue;
                         }
@@ -233,15 +231,26 @@ abstract class ShootingEnemy extends Enemy implements IShotable {
 
         //stage === 2
         this._attackCounter++;
-        if (this._attackCounter === this._attackBorder) {
+        if (this._attackCounter >= this._attackBorder && this.isPossibleToShot()) {
             this._attackCounter = 0;
             this.shot();
         }
 
     }
-    shot(): void {
-        let newBullet: Enemy1Bullet = new Enemy1Bullet(this._map, this._map.getCell(this._cell.x, this._cell.y + 2));
-        this._map.addBullet(newBullet);
+    public abstract shot(): void;
+    protected isPossibleToShot(): boolean {
+        if (this._cell.y + this._height > this._map.height) {
+            return false;
+        }
+
+        for (let i = this._cell.y + this._height; i < this._map.height; i++) {
+            for (let j = 0; j < this._width; j++) {
+                if (this._map.getCell(this._cell.x + j, i).isContainsEnemy()) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }
 
@@ -277,6 +286,59 @@ class Enemy1 extends ShootingEnemy {
 
         switch (this._map.enemyAttackSpeed) {
             case 1:
+                this._attackBorder = 22;
+                break;
+            case 2:
+                this._attackBorder = 15;
+                break;
+            case 3:
+                this._attackBorder = 11;
+                break;
+
+        }
+        this._attackCounter = this._attackBorder;
+        this._moveCounter = this._moveBorder;
+        this.takeCells();
+    }
+
+    shot(): void {
+        let newBullet: Enemy1Bullet = new Enemy1Bullet(this._map, this._map.getCell(this._cell.x, this._cell.y + 2));
+        this._map.addBullet(newBullet);
+    }
+}
+
+class Enemy2 extends ShootingEnemy {
+    _height = 2;
+    _width = 2;
+    _maxHitPoints = 3;
+    _hitPoints = 3;
+    _reward = 30;
+
+    constructor(map: BattleMap, startCell: Cell) {
+        super(map, startCell);
+        this._htmlObject = document.createElement("div");
+        this._htmlObject.classList.add("entity");
+        this._htmlObject.classList.add("enemy2");
+        this._htmlObject.classList.add("width-two");
+        this._htmlObject.classList.add("height-two");
+
+        this._map.htmlObject.append(this._htmlObject);
+        this.redraw();
+
+        switch (this._map.enemyMoveSpeed) {
+            case 1:
+                this._moveBorder = 24;
+                break;
+            case 2:
+                this._moveBorder = 18;
+                break;
+            case 3:
+                this._moveBorder = 11;
+                break;
+        }
+
+        switch (this._map.enemyAttackSpeed) {
+            case 1:
                 this._attackBorder = 26;
                 break;
             case 2:
@@ -287,20 +349,135 @@ class Enemy1 extends ShootingEnemy {
                 break;
 
         }
+        this._attackCounter = this._attackBorder;
+        this._moveCounter = this._moveBorder;
         this.takeCells();
     }
-}
 
-abstract class KamikazeEnemy extends Enemy {
-    public chooseAction(stage: number): void {
-
+    public shot(): void {
+        let newBullet: Enemy2Bullet = new Enemy2Bullet(this._map, this._map.getCell(this._cell.x, this._cell.y + 2));
+        this._map.addBullet(newBullet);
     }
 }
+
+class Enemy3 extends ShootingEnemy {
+    _height = 1;
+    _width = 2;
+    _maxHitPoints = 2;
+    _hitPoints = 2;
+    _reward = 30;
+
+    constructor(map: BattleMap, startCell: Cell) {
+        super(map, startCell);
+        this._htmlObject = document.createElement("div");
+        this._htmlObject.classList.add("entity");
+        this._htmlObject.classList.add("enemy3");
+        this._htmlObject.classList.add("width-two");
+        this._htmlObject.classList.add("height-one");
+
+        this._map.htmlObject.append(this._htmlObject);
+        this.redraw();
+
+        switch (this._map.enemyMoveSpeed) {
+            case 1:
+                this._moveBorder = 16;
+                break;
+            case 2:
+                this._moveBorder = 12;
+                break;
+            case 3:
+                this._moveBorder = 7;
+                break;
+        }
+
+        switch (this._map.enemyAttackSpeed) {
+            case 1:
+                this._attackBorder = 22;
+                break;
+            case 2:
+                this._attackBorder = 15;
+                break;
+            case 3:
+                this._attackBorder = 11;
+                break;
+
+        }
+        this._attackCounter = this._attackBorder;
+        this._moveCounter = this._moveBorder;
+        this.takeCells();
+    }
+
+    shot(): void {
+        let newBullet: Enemy3Bullet = new Enemy3Bullet(this._map, this._map.getCell(this._cell.x, this._cell.y + 1));
+        let newBullet2: Enemy3Bullet = new Enemy3Bullet(this._map, this._map.getCell(this._cell.x + 1, this._cell.y + 1));
+        this._map.addBullet(newBullet);
+        this._map.addBullet(newBullet2);
+    }
+}
+
+class Enemy4 extends ShootingEnemy {
+    _height = 1;
+    _width = 1;
+    _maxHitPoints = 1;
+    _hitPoints = 1;
+    _reward = 15;
+
+    constructor(map: BattleMap, startCell: Cell) {
+        super(map, startCell);
+        this._htmlObject = document.createElement("div");
+        this._htmlObject.classList.add("entity");
+        this._htmlObject.classList.add("enemy4");
+        this._htmlObject.classList.add("width-one");
+        this._htmlObject.classList.add("height-one");
+
+        this._map.htmlObject.append(this._htmlObject);
+        this.redraw();
+
+        switch (this._map.enemyMoveSpeed) {
+            case 1:
+                this._moveBorder = 12;
+                break;
+            case 2:
+                this._moveBorder = 8;
+                break;
+            case 3:
+                this._moveBorder = 4;
+                break;
+        }
+
+        switch (this._map.enemyAttackSpeed) {
+            case 1:
+                this._attackBorder = 18;
+                break;
+            case 2:
+                this._attackBorder = 13;
+                break;
+            case 3:
+                this._attackBorder = 10;
+                break;
+
+        }
+        this._attackCounter = this._attackBorder;
+        this._moveCounter = this._moveBorder;
+        this.takeCells();
+    }
+
+    shot(): void {
+        let newBullet: Enemy3Bullet = new Enemy4Bullet(this._map, this._map.getCell(this._cell.x, this._cell.y + 1));
+        this._map.addBullet(newBullet);
+    }
+}
+
+// abstract class KamikazeEnemy extends Enemy {
+//     public chooseAction(stage: number): void {
+//? в реализации отказано
+//     }
+// }
 
 abstract class Bullet extends Entity {
     protected damageValue: number;
     protected abstract isHitTarget(): void;
-    public die(): void {
+    protected die(): void {
         this._htmlObject.parentElement.removeChild(this._htmlObject);
         for (let i = 0; i < this._width; ++i) {
             for (let j = 0; j < this._height; ++j) {
@@ -358,7 +535,7 @@ abstract class MovingBullet extends Bullet implements IMovable {
     public chooseAction(stage: number): void {
         if (stage === 1) {
             this._moveCounter++;
-            if (this._moveCounter === this._moveBorder) {
+            if (this._moveCounter >= this._moveBorder) {
                 this._moveCounter = 0;
                 if (this.isPossibleToMove(this._directionX, this._directionY)) {
                     this.move(this._directionX, this._directionY);
@@ -376,26 +553,57 @@ abstract class MovingBullet extends Bullet implements IMovable {
     }
 }
 
-//! остановились здесь
-// abstract class RayBullet extends Bullet{
-//     protected _explosionCounter:number = 0;
-//     protected _explosionBorder:number;
+abstract class RayBullet extends Bullet {
+    protected _explosionCounter: number = 0;
+    protected _explosionBorder: number;
+    public chooseAction(stage: number): void {
+        if (stage === 1) {
 
-//     public die(): void {
-        
-//     }
-//     public chooseAction(stage: number): void {
-//         if(stage === 1){
+            return;
+        }
+        this._explosionCounter++;
+        if (this._explosionCounter >= this._explosionBorder) {
+            this.isHitTarget();
+            this.die();
+        }
+    }
 
-//             return;
-//         }
-//         this._explosionCounter++;
-//         if(this._explosionCounter === this._explosionBorder){
-//             this.die();
-//         }
-//         this.isHitTarget();
-//     }
-// }
+    protected isHitTarget(): void {
+        for (let i = this._cell.y; i < this._map.height; i++) {
+            for (let j = 0; j < this._width; j++) {
+                if (this._map.getCell(this._cell.x + j, i).isContainsHero()) {
+                    this._map.player.getDamage(this.damageValue);
+                    return;
+                }
+            }
+
+        }
+    }
+}
+
+
+class Enemy2Bullet extends RayBullet {
+    _width = 2;
+    _explosionBorder = 10;
+    damageValue = 2;
+
+    constructor(map: BattleMap, cell: Cell) {
+        super(map, cell);
+
+        this._htmlObject = document.createElement("div");
+        this._htmlObject.classList.add("entity");
+        this._htmlObject.classList.add("bullet-enemy2");
+        this._htmlObject.classList.add("width-two");
+
+        this._htmlObject.classList.add("shot-ray");
+        this._height = this._map.height - this._cell.y;
+        this._htmlObject.style.height = String(this._height * this._map.cellSize) + "px";
+
+        this._map.htmlObject.append(this._htmlObject);
+        this.redraw();
+        this.takeCells();
+    }
+}
 
 class HeroBullet extends MovingBullet {
     _width = 1;
@@ -441,10 +649,10 @@ abstract class EnemyMovingBullet extends MovingBullet {
     }
 }
 
-class Enemy1Bullet extends EnemyMovingBullet{
+class Enemy1Bullet extends EnemyMovingBullet {
     _width = 1;
     _height = 1;
-    _moveBorder = 1;
+    _moveBorder = 3;
     damageValue = 1;
 
     constructor(map: BattleMap, startCell: Cell) {
@@ -466,6 +674,55 @@ class Enemy1Bullet extends EnemyMovingBullet{
     }
 }
 
+class Enemy4Bullet extends EnemyMovingBullet {
+    _width = 1;
+    _height = 1;
+    _moveBorder = 2;
+    damageValue = 1;
+
+    constructor(map: BattleMap, startCell: Cell) {
+        super(map, startCell);
+
+
+        this._htmlObject = document.createElement("div");
+        this._htmlObject.classList.add("entity");
+        this._htmlObject.classList.add("bullet-enemy4");
+        this._htmlObject.classList.add("width-one");
+        this._htmlObject.classList.add("height-one");
+
+        this._map.htmlObject.append(this._htmlObject);
+        this.redraw();
+        this.takeCells();
+
+        this._directionX = 0;
+        this._directionY = 1;
+    }
+}
+
+class Enemy3Bullet extends EnemyMovingBullet {
+    _width = 1;
+    _height = 1;
+    _moveBorder = 1;
+    damageValue = 1;
+
+    constructor(map: BattleMap, startCell: Cell) {
+        super(map, startCell);
+
+
+        this._htmlObject = document.createElement("div");
+        this._htmlObject.classList.add("entity");
+        this._htmlObject.classList.add("bullet-enemy3");
+        this._htmlObject.classList.add("width-one");
+        this._htmlObject.classList.add("height-one");
+
+        this._map.htmlObject.append(this._htmlObject);
+        this.redraw();
+        this.takeCells();
+
+        this._directionX = 0;
+        this._directionY = 1;
+    }
+}
 
 
 class Explosion {
@@ -487,3 +744,35 @@ class Explosion {
         }, 200)
     }
 }
+
+abstract class Bonus extends Entity {
+    protected _dyingCounter: number = 0;
+    protected _dyingBorder: number;
+
+    public abstract bePickedUp(): void;
+
+    public chooseAction(stage: number): void {
+        if (stage === 1) {
+            this._dyingCounter++;
+            if(this._dyingCounter>= this._dyingBorder){
+                this.die();
+            }
+        }
+    }
+
+    protected die(): void {
+        this._htmlObject.parentElement.removeChild(this._htmlObject);
+
+        for (let i = 0; i < this._width; ++i) {
+            for (let j = 0; j < this._height; ++j) {
+                this._map.getCell(this._cell.x + i, this._cell.y + j).deleteEntity(this);
+            }
+        }
+
+        this._map.deleteEntity(this);
+    }
+}
+
+// class HealthBonus extends Bonus{
+    //! здесь закончили
+// }

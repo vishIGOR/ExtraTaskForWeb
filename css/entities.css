@@ -58,7 +58,19 @@
 }
 
 .enemy1{
+    background-image: url(/images/Starships/Enemy_Ship_3.png);
+}
+
+.enemy2{
+    background-image: url(/images/Starships/Enemy_Ship_2.png);
+}
+
+.enemy3{
     background-image: url(/images/Starships/Enemy_Ship_1.png);
+}
+
+.enemy4{
+    background-image: url(/images/Starships/Enemy_Ship_4.png);
 }
 
 .bullet-hero{
@@ -70,12 +82,18 @@
 }
 
 .bullet-enemy2{
-    background-image: url(/images/Shots/Enemy_Shot_2.png);
+    opacity:20%;
+    background-image: url(/images/Shots/Enemy_Shot_3.png);
 }
 
 .bullet-enemy3{
-    background-image: url(/images/Shots/Enemy_Shot_3.png);
+    background-image: url(/images/Shots/Enemy_Shot_2.png);
 }
+
+.bullet-enemy4{
+    background-image: url(/images/Shots/Enemy_Shot_4.png);
+}
+
 
 
 
@@ -99,13 +117,50 @@
 
 .shot-ray{
     animation-name: animation-shot-ray;
-    animation-duration: 0.2s;
+    animation-duration: 2s;
     animation-iteration-count: 1;
+}
+
+.dying{
+    animation-name: animation-dying;
+    animation-duration: 0.3s;
+    animation-iteration-count: 1;
+}
+
+.damaged{
+    animation-name: animation-damaged;
+    animation-duration: 0.4s;
+    animation-iteration-count: 1;
+}
+
+@keyframes animation-damaged{
+    from{
+        opacity: 100%;
+        filter:hue-rotate(0deg);
+    }
+    50%{
+        opacity: 70%;
+        filter:hue-rotate(90deg);
+    }
+    to{
+        opacity:100%;
+        filter:hue-rotate(0deg);
+    }
+}
+
+
+@keyframes animation-dying{
+    from{
+        opacity: 100%;
+    }
+    to{
+        opacity: 0%;
+    }
 }
 
 @keyframes animation-shot-ray{
     from{
-        opacity: 0%;
+        opacity: 20%;
     }
     to{
         opacity: 100%;

@@ -1,4 +1,5 @@
 class BattleMap {
+    private _isGameOn:boolean;
     private _htmlObject: HTMLElement;
 
     private _height: number;
@@ -10,7 +11,7 @@ class BattleMap {
     private _entities: Entity[] = [];
     private _enemies: Enemy[] = [];
     private _bullets: Bullet[] = [];
-    // private _explosions: Explosion[] = [];
+    private _bonuses:Bonus[] = [];
 
     private _enemyMoveSpeed: string;
     private _enemyAttackSpeed: string;
@@ -23,6 +24,32 @@ class BattleMap {
     private _points: number = 0;
 
     public player: Hero;
+
+    private _movingAccess:boolean = true;
+    private _attackAccess:boolean = true;
+
+    private _movingBlockDuration:number = 200;
+    private _attackBlockDuration:number = 300;
+
+    private blockMovingAccess() {
+        this._movingAccess = false;
+    }
+    
+    private unblockMovingAccess() {
+        setTimeout(() => {
+            this._movingAccess = true;
+        }, this._movingBlockDuration)
+    }
+    
+    private blockAttackAccess() {
+        this._attackAccess = false;
+    }
+    
+    private unblockAttackAccess() {
+        setTimeout(() => {
+            this._attackAccess = true;
+        }, this._attackBlockDuration)
+    }
 
 
     constructor(sellSize: number) {
@@ -39,6 +66,34 @@ class BattleMap {
                 this._cells[i][j] = new Cell(i, j);
             }
         }
+
+        this.initPlayerControls();
+
+        this._isGameOn = true;
+
+        this._enemyMoveSpeed = localStorage.getItem("enemyMoveSpeed");
+        this._enemyAttackSpeed = localStorage.getItem("enemyAttackSpeed");
+        this._enemySpawnSpeed = localStorage.getItem("enemySpawnSpeed");
+        this._numberOfLives = localStorage.getItem("numberOfLives");
+
+        switch (this.enemySpawnSpeed) {
+            case 1:
+                this._enemySpawnBorder = 11;
+                break;
+
+            case 2:
+                this._enemySpawnBorder = 8;
+                break;
+
+            case 3:
+                this._enemySpawnBorder = 5;
+                break;
+        }
+        this.player = new Hero(this, this._cells[0][this._height - 2]);
+
+        this.redrawHitPoints();
+
+        this.updateMap();
     }
 
     public get height(): number {
@@ -71,30 +126,6 @@ class BattleMap {
 
     public get numberOfLives(): number {
         return Number(this._numberOfLives);
-    }
-
-    public startGame(): void {
-        this._enemyMoveSpeed = localStorage.getItem("enemyMoveSpeed");
-        this._enemyAttackSpeed = localStorage.getItem("enemyAttackSpeed");
-        this._enemySpawnSpeed = localStorage.getItem("enemySpawnSpeed");
-        this._numberOfLives = localStorage.getItem("numberOfLives");
-
-        switch (this.enemySpawnSpeed) {
-            case 1:
-                this._enemySpawnBorder = 11;
-                break;
-
-            case 2:
-                this._enemySpawnBorder = 8;
-                break;
-
-            case 3:
-                this._enemySpawnBorder = 5;
-                break;
-        }
-        this.player = new Hero(this, this._cells[0][this._height - 2]);
-
-        this.redrawHitPoints();
     }
 
     public endGame(): void {
@@ -150,6 +181,12 @@ class BattleMap {
                 this.addRandomEnemy(cellForEnemy);
             }
         }
+
+        if(this._isGameOn){
+            setTimeout(()=>{
+                this.updateMap();
+            },100);
+        }
     }
 
     private findCellToAddEnemy(): Cell {
@@ -181,26 +218,145 @@ class BattleMap {
     private addRandomEnemy(startCell: Cell): void {
         let newEnemy: Enemy;
 
-        newEnemy = new Enemy1(this, startCell);
+        let randomInt = getRandomInt(0, 4);
+        if (randomInt === 0) {
+            newEnemy = new Enemy1(this, startCell);
+            this._enemies.push(newEnemy);
+            this._entities.push(newEnemy);
+            return;
+        }
 
+        if (randomInt === 1) {
+            newEnemy = new Enemy2(this, startCell);
+            this._enemies.push(newEnemy);
+            this._entities.push(newEnemy);
+            return;
+        }
+
+        if (randomInt === 2) {
+            newEnemy = new Enemy3(this, startCell);
+            this._enemies.push(newEnemy);
+            this._entities.push(newEnemy);
+            return;
+        }
+
+        newEnemy = new Enemy4(this, startCell);
         this._enemies.push(newEnemy);
         this._entities.push(newEnemy);
     }
 
     public deleteEntity(entity: Entity): void {
+        this._entities.splice(this._entities.indexOf(entity), 1);
+
         if (entity instanceof Enemy) {
             this._enemies.splice(this._enemies.indexOf(entity), 1);
+            return;
         }
 
         if (entity instanceof Bullet) {
             this._bullets.splice(this._bullets.indexOf(entity), 1);
+            return;
         }
 
-        this._entities.splice(this._entities.indexOf(entity), 1);
+        if (entity instanceof Bonus) {
+            this._bonuses.splice(this._bonuses.indexOf(entity), 1);
+            return;
+        }
+
     }
 
     public addBullet(bullet: Bullet): void {
         this._entities.push(bullet);
         this._bullets.push(bullet);
+    }
+
+    private initPlayerControls() {
+        document.getElementById("arrow_top").onclick = function () {
+            if (battleMap._movingAccess) {
+                battleMap.blockMovingAccess();
+                battleMap.player.move(0, -1);
+                battleMap.unblockMovingAccess();
+            }
+        };
+        document.getElementById("arrow_right").onclick = function () {
+            if (battleMap._movingAccess) {
+                battleMap.blockMovingAccess();
+                battleMap.player.move(1, 0);
+                battleMap.unblockMovingAccess();
+            }
+    
+        };
+    
+        document.getElementById("arrow_down").onclick = function () {
+            if (battleMap._movingAccess) {
+                battleMap.blockMovingAccess();
+                battleMap.player.move(0, 1);
+                battleMap.unblockMovingAccess();
+            }
+        };
+    
+        document.getElementById("arrow_left").onclick = function () {
+            if (battleMap._movingAccess) {
+                battleMap.blockMovingAccess();
+                battleMap.player.move(-1, 0);
+                battleMap.unblockMovingAccess();
+            }
+        };
+    
+        document.getElementById("shoot").onclick = function () {
+            if (battleMap._attackAccess) {
+                battleMap.blockAttackAccess();
+                battleMap.player.shot();
+                battleMap.unblockAttackAccess();
+            }
+        };
+    
+        document.addEventListener('keydown', function (event) {
+            if (event.code == 'ArrowUp') {
+                if (battleMap._movingAccess) {
+                    battleMap.blockMovingAccess();
+                    battleMap.player.move(0, -1);
+                    battleMap.unblockMovingAccess();
+                }
+                return;
+            }
+    
+            if (event.code == 'ArrowRight') {
+                if (battleMap._movingAccess) {
+                    battleMap.blockMovingAccess();
+                    battleMap.player.move(1, 0);
+                    battleMap.unblockMovingAccess();
+                }
+                return;
+            }
+    
+            if (event.code == 'ArrowDown') {
+                if (battleMap._movingAccess) {
+                    battleMap.blockMovingAccess();
+                    battleMap.player.move(0, 1);
+                    battleMap.unblockMovingAccess();
+                }
+                return;
+            }
+    
+            if (event.code == 'ArrowLeft') {
+                if (battleMap._movingAccess) {
+                    battleMap.blockMovingAccess();
+                    battleMap.player.move(-1, 0);
+                    battleMap.unblockMovingAccess();
+                }
+                return;
+            }
+    
+            if (event.code == 'Space') {
+                if (battleMap._attackAccess) {
+                    battleMap.blockAttackAccess();
+                    battleMap.player.shot();
+                    battleMap.unblockAttackAccess();
+                }
+                return;
+            }
+        })
+    
     }
 }
