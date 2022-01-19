@@ -25,6 +25,7 @@ class BattleMap {
     private _bonusSpawnBorder = 125;
 
     private _points: number = 0;
+    private _kills: number = 0;
 
     public player: Hero;
 
@@ -133,6 +134,9 @@ class BattleMap {
 
     public endGame(): void {
         //логика пересоздания и результатов
+        this._isGameOn = false;
+        localStorage.setItem("currentScore", String(this._points));
+        document.location = "/menu.html";
     }
 
     public redrawHitPoints(): void {
@@ -140,19 +144,34 @@ class BattleMap {
     }
 
     public increaseScore(value: number): void {
+        this._kills++;
         this._points += value;
         this.redrawScore();
+
+        if (this._kills === 10) {
+            this._enemies.forEach(enemy => {
+                enemy.increasePower();
+            });
+            this._kills = 0;
+        }
+
     }
 
     public redrawScore(): void {
         document.getElementById("score").innerText = String(this._points);
     }
 
-    // public setDifficultyLevel(enemyMS:number,enemyAS:number,enemySS:number){
-    //     this.enemyMoveSpeed = enemyMS;
-    //     this.enemyAttackSpeed = enemyAS;
-    //     this.enemySpawnSpeed = enemySS;
-    // }
+    public redrawBonus(name: string, duration: number): void {
+        if (duration <= 0) {
+            document.getElementById("bonus").innerText = "";
+            return;
+        }
+
+        document.getElementById("bonus").innerText = name + " " + String(duration) + "ms";
+        setTimeout(() => {
+            this.redrawBonus(name, duration - 100)
+        }, 100);
+    }
 
     public getCells(): Cell[][] {
         return this._cells;
@@ -305,7 +324,7 @@ class BattleMap {
     }
 
     private addRandomBonus(cell: Cell): void {
-        let randomInt: number = getRandomInt(1,5);
+        let randomInt: number = getRandomInt(1, 5);
         let newBonus: Bonus;
         if (randomInt === 1) {
             newBonus = new HealthBonus(this, cell);

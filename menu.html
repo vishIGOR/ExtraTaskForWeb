@@ -3,7 +3,8 @@
 
 <head>
     <meta charset="utf-8" />
-    <link rel="stylesheet" href="/css/index.css">
+    <link rel="stylesheet" href="./css/index.css">
+    <link rel="stylesheet" href="./css/menu.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css"
         integrity="sha384-zCbKRCUGaJDkqS1kPbPd7TveP5iyJE0EjAuZQTgFLD2ylzuqKfdKlfG/eSrtxUkn" crossorigin="anonymous">
     <title>Game over</title>
@@ -29,25 +30,38 @@
     </div>
 
     <div id="main_div">
-        <div class="w-100 h-100 d-flex justify-content-center align-items-center">
+        <div class="w-100 h-100 justify-content-center align-items-center element-disabled" id="addNewScoreForm">
             <div class="container w-auto color-theme color-theme-border">
-                <h1 class="row mt-3 mb-5 d-flex justify-content-center">GAME OVER</h1>
-                <div class="row mx-5">
-                    <div>Congratulations! You scored:</div>
+                <h1 class="row mt-3 mb-5 px-5 d-flex justify-content-center">GAME OVER</h1>
+                <div class="pl-3 row">
+                    <div id="scoreRow">Congratulations! You scored:</div>
                 </div>
-                <div class="row mx-5 my-5">Type your name in to continue:</div>
-                <div class="form-group row d-flex align-items-center">
-                    <label for="enemyMoveSpeed" class="col-sm-4 col-form-label">Скорость передвижения врагов</label>
-                    <div class="col-sm-8">
-                        <select class="form-control color-theme " id="enemyMoveSpeed">
-                            <option value="1">Низкая</option>
-                            <option value="2">Средняя</option>
-                            <option value="3">Высокая</option>
-                        </select>
-                    </div>
-                </div>
+                <div class="pl-3 row my-5">Type your name in to continue:</div>
+                <form class="pl-3 mb-5 pb-5 row">
+                    <input class="color-theme color-theme-border col-8" maxlength="18" type="text" id="usernameForm">
+                    <button
+                        class="ml-3 color-theme color-theme-border col-3 d-flex justify-content-center button-disabled"
+                        id="usernameButton" disabled="true">Continue</button>
+                </form>
             </div>
         </div>
+
+        <div class="w-100 h-100 justify-content-center align-items-center element-disabled" id="leaderboard">
+            <div class="container w-auto color-theme color-theme-border" >
+                <h1 class="row mt-3 mb-5 px-5 d-flex justify-content-center" id="leadersTable">LEADERBOARD</h1>
+                <!-- <div class="row d-flex justify-content-between ">
+                    <div class="col-6">0. test</div>
+                    <div class="col-6 text-right">213123</div>
+                </div> -->
+                <div class="row my-5 d-flex align-items-center justify-content-center">
+                    <h2 id="playAgainButton"
+                        class="d-flex justify-content-center align-items-center color-theme-border px-4">Play again</h2>
+                </div>
+            </div>
+
+        </div>
+
+
     </div>
 
 
@@ -59,6 +73,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-fQybjgWLrvvRgtW6bFlB7jaZrFsaBXjsOMm/tB9LTS58ONXgqbR9W8oWht/amnpF"
         crossorigin="anonymous"></script>
+    <script src="./scripts/menu.js"></script>
 </body>
 
 </html>

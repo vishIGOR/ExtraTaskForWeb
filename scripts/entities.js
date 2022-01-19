@@ -109,6 +109,9 @@ var Hero = /** @class */ (function (_super) {
     Hero.prototype.getDamage = function (value) {
         _super.prototype.getDamage.call(this, value);
         this._map.redrawHitPoints();
+        if (this.hitPoints <= 0) {
+            this._map.endGame();
+        }
         document.getElementById("screenForDamagingHero").style.zIndex = "2000";
         document.getElementById("screenForDamagingHero").classList.add("heroIsDamaged");
         setTimeout(function () {
@@ -129,9 +132,28 @@ var Hero = /** @class */ (function (_super) {
             }
         }
     };
+    Hero.prototype.checkCellsForEnemies = function () {
+        var flag = false;
+        for (var i = 0; i < this._width; i++) {
+            for (var j = 0; j < this._height; j++) {
+                if (this._map.getCell(this._cell.x + i, this._cell.y + j).isContainsEnemy()) {
+                    flag = true;
+                    this._map.getCell(this._cell.x + i, this._cell.y + j).entities.forEach(function (entity) {
+                        if (entity instanceof Enemy) {
+                            entity.getDamage(666);
+                        }
+                    });
+                }
+            }
+        }
+        if (flag) {
+            this.getDamage(1);
+        }
+    };
     Hero.prototype.move = function (x, y) {
         _super.prototype.move.call(this, x, y);
         this.checkCellsForBonuses();
+        this.checkCellsForEnemies();
     };
     Hero.prototype.shot = function () {
         var newBullet = new HeroBullet(this._map, this._map.getCell(this._cell.x, this._cell.y - 1));
@@ -194,6 +216,10 @@ var Enemy = /** @class */ (function (_super) {
             _this._moveBorder /= coef;
         }, duration);
     };
+    Enemy.prototype.increasePower = function () {
+        this._reward += 3;
+        this._moveBorder--;
+    };
     Enemy.prototype.getDamage = function (value) {
         var _this = this;
         _super.prototype.getDamage.call(this, value);
@@ -203,6 +229,26 @@ var Enemy = /** @class */ (function (_super) {
                 _this._htmlObject.classList.remove("damagedEnemy");
             }, 200);
         }
+    };
+    Enemy.prototype.checkCellsForEndOfMap = function () {
+        if (this._cell.y + this._height >= this._map.height) {
+            this._map.player.getDamage(666);
+        }
+    };
+    Enemy.prototype.checkCellsForHero = function () {
+        for (var i = 0; i < this._width; i++) {
+            for (var j = 0; j < this._height; j++) {
+                if (this._map.getCell(this._cell.x + i, this._cell.y + j).isContainsHero()) {
+                    this._map.player.getDamage(1);
+                    this.getDamage(666);
+                }
+            }
+        }
+    };
+    Enemy.prototype.move = function (x, y) {
+        _super.prototype.move.call(this, x, y);
+        this.checkCellsForHero();
+        this.checkCellsForEndOfMap();
     };
     return Enemy;
 }(Spaceship));
@@ -242,6 +288,10 @@ var ShootingEnemy = /** @class */ (function (_super) {
             this._attackCounter = 0;
             this.shot();
         }
+    };
+    ShootingEnemy.prototype.increasePower = function () {
+        _super.prototype.increasePower.call(this);
+        this._attackBorder--;
     };
     ShootingEnemy.prototype.isPossibleToShot = function () {
         if (this._cell.y + this._height >= this._map.height) {
@@ -754,6 +804,7 @@ var HealthBonus = /** @class */ (function (_super) {
         return _this;
     }
     HealthBonus.prototype.bePickedUp = function () {
+        this._map.redrawBonus("heal", 150);
         this._map.player.beHealed(this._healValue);
         this.die();
     };
@@ -779,6 +830,7 @@ var AttackSpeedBonus = /** @class */ (function (_super) {
         return _this;
     }
     AttackSpeedBonus.prototype.bePickedUp = function () {
+        this._map.redrawBonus("Attack Speed Increased!", this._duration);
         this._map.increasePlayerAttackSpeed(this._newAttackSpeed, this._duration);
         this.die();
     };
@@ -804,6 +856,7 @@ var MoveSpeedBonus = /** @class */ (function (_super) {
         return _this;
     }
     MoveSpeedBonus.prototype.bePickedUp = function () {
+        this._map.redrawBonus("Move Speed Increased!", this._duration);
         this._map.increasePlayerAttackSpeed(this._newMoveSpeed, this._duration);
         this.die();
     };
@@ -829,6 +882,7 @@ var enemyMoveSpeedDebuffBonus = /** @class */ (function (_super) {
         return _this;
     }
     enemyMoveSpeedDebuffBonus.prototype.bePickedUp = function () {
+        this._map.redrawBonus("Enemies are slowed down!", this._duration);
         this._map.decreaseEnemyMoveSpeed(this._debuffCoef, this._duration);
         this.die();
     };

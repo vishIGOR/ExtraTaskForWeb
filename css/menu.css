@@ -1,0 +1,13 @@
+.button-disabled{
+    opacity: 70%;
+}
+
+.element-disabled{
+    display: none !important;
+}
+
+
+#playAgainButton:hover {
+    opacity: 80%;
+    cursor: pointer;
+}

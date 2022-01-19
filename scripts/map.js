@@ -8,6 +8,7 @@ var BattleMap = /** @class */ (function () {
         this._bonusSpawnCounter = 0;
         this._bonusSpawnBorder = 125;
         this._points = 0;
+        this._kills = 0;
         this._movingAccess = true;
         this._attackAccess = true;
         this._movingBlockDuration = 200;
@@ -120,22 +121,38 @@ var BattleMap = /** @class */ (function () {
     });
     BattleMap.prototype.endGame = function () {
         //логика пересоздания и результатов
+        this._isGameOn = false;
+        localStorage.setItem("currentScore", String(this._points));
+        document.location = "/menu.html";
     };
     BattleMap.prototype.redrawHitPoints = function () {
         document.getElementById("hitPoints").innerText = String(this.player.hitPoints);
     };
     BattleMap.prototype.increaseScore = function (value) {
+        this._kills++;
         this._points += value;
         this.redrawScore();
+        if (this._kills === 10) {
+            this._enemies.forEach(function (enemy) {
+                enemy.increasePower();
+            });
+            this._kills = 0;
+        }
     };
     BattleMap.prototype.redrawScore = function () {
         document.getElementById("score").innerText = String(this._points);
     };
-    // public setDifficultyLevel(enemyMS:number,enemyAS:number,enemySS:number){
-    //     this.enemyMoveSpeed = enemyMS;
-    //     this.enemyAttackSpeed = enemyAS;
-    //     this.enemySpawnSpeed = enemySS;
-    // }
+    BattleMap.prototype.redrawBonus = function (name, duration) {
+        var _this = this;
+        if (duration <= 0) {
+            document.getElementById("bonus").innerText = "";
+            return;
+        }
+        document.getElementById("bonus").innerText = name + " " + String(duration) + "ms";
+        setTimeout(function () {
+            _this.redrawBonus(name, duration - 100);
+        }, 100);
+    };
     BattleMap.prototype.getCells = function () {
         return this._cells;
     };
