@@ -5,6 +5,8 @@ var BattleMap = /** @class */ (function () {
         this._bullets = [];
         this._bonuses = [];
         this._enemySpawnCounter = 0;
+        this._bonusSpawnCounter = 0;
+        this._bonusSpawnBorder = 125;
         this._points = 0;
         this._movingAccess = true;
         this._attackAccess = true;
@@ -29,13 +31,13 @@ var BattleMap = /** @class */ (function () {
         this._numberOfLives = localStorage.getItem("numberOfLives");
         switch (this.enemySpawnSpeed) {
             case 1:
-                this._enemySpawnBorder = 11;
+                this._enemySpawnBorder = 20;
                 break;
             case 2:
-                this._enemySpawnBorder = 8;
+                this._enemySpawnBorder = 15;
                 break;
             case 3:
-                this._enemySpawnBorder = 5;
+                this._enemySpawnBorder = 11;
                 break;
         }
         this.player = new Hero(this, this._cells[0][this._height - 2]);
@@ -152,11 +154,19 @@ var BattleMap = /** @class */ (function () {
             enemy.chooseAction(2);
         });
         this._enemySpawnCounter++;
-        if (this._enemySpawnCounter == this._enemySpawnBorder) {
+        if (this._enemySpawnCounter >= this._enemySpawnBorder) {
             this._enemySpawnCounter = 0;
             var cellForEnemy = this.findCellToAddEnemy();
             if (cellForEnemy !== null) {
                 this.addRandomEnemy(cellForEnemy);
+            }
+        }
+        this._bonusSpawnCounter++;
+        if (this._bonusSpawnCounter >= this._bonusSpawnBorder) {
+            this._bonusSpawnCounter = 0;
+            var cellForBonus = this.findCellToAddBonus();
+            if (cellForBonus !== null) {
+                this.addRandomBonus(cellForBonus);
             }
         }
         if (this._isGameOn) {
@@ -230,6 +240,72 @@ var BattleMap = /** @class */ (function () {
     BattleMap.prototype.addBullet = function (bullet) {
         this._entities.push(bullet);
         this._bullets.push(bullet);
+    };
+    BattleMap.prototype.findCellToAddBonus = function () {
+        var possibleCells = [];
+        var cellsCounter;
+        for (var i = 0; i < this._width - 1; i++) {
+            for (var j = 2; j < this._height - 3; j++) {
+                if (!this.getCell(i, j).isContainsEnemy() && !this.getCell(i, j).isContainsHero() && !this.getCell(i, j).isContainsBonus()) {
+                    cellsCounter++;
+                    possibleCells.push(this.getCell(i, j));
+                }
+            }
+        }
+        // console.log("//", possibleCells);
+        if (possibleCells.length === 0) {
+            return null;
+        }
+        return possibleCells[getRandomInt(0, possibleCells.length)];
+    };
+    BattleMap.prototype.addRandomBonus = function (cell) {
+        var randomInt = getRandomInt(1, 5);
+        var newBonus;
+        if (randomInt === 1) {
+            newBonus = new HealthBonus(this, cell);
+            this._entities.push(newBonus);
+            this._bonuses.push(newBonus);
+            return;
+        }
+        if (randomInt === 2) {
+            newBonus = new AttackSpeedBonus(this, cell);
+            this._entities.push(newBonus);
+            this._bonuses.push(newBonus);
+            return;
+        }
+        if (randomInt === 3) {
+            newBonus = new MoveSpeedBonus(this, cell);
+            this._entities.push(newBonus);
+            this._bonuses.push(newBonus);
+            return;
+        }
+        if (randomInt === 4) {
+            newBonus = new enemyMoveSpeedDebuffBonus(this, cell);
+            this._entities.push(newBonus);
+            this._bonuses.push(newBonus);
+            return;
+        }
+    };
+    BattleMap.prototype.increasePlayerAttackSpeed = function (newAS, duration) {
+        var _this = this;
+        var oldAS = this._attackBlockDuration;
+        this._attackBlockDuration = newAS;
+        setTimeout(function () {
+            _this._attackBlockDuration = oldAS;
+        }, duration);
+    };
+    BattleMap.prototype.increasePlayerMoveSpeed = function (newMS, duration) {
+        var _this = this;
+        var oldMS = this._movingBlockDuration;
+        this._movingBlockDuration = newMS;
+        setTimeout(function () {
+            _this._movingBlockDuration = oldMS;
+        }, duration);
+    };
+    BattleMap.prototype.decreaseEnemyMoveSpeed = function (coef, duration) {
+        this._enemies.forEach(function (enemy) {
+            enemy.decreaseMoveSpeed(coef, duration);
+        });
     };
     BattleMap.prototype.initPlayerControls = function () {
         document.getElementById("arrow_top").onclick = function () {

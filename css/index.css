@@ -34,6 +34,36 @@ body {
     animation-iteration-count: infinite;
 }
 
+
+#screenForDamagingHero{
+    z-index: -2000;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: red;
+    opacity: 0%;
+
+    
+}
+
+.heroIsDamaged{
+    animation-name: animation-hero-damaged;
+    animation-duration: 0.3s;
+    animation-iteration-count: 1;
+}
+
+@keyframes animation-hero-damaged{
+    from{
+        opacity: 0%;
+    }
+    50%{
+        opacity: 65%;
+    }
+    to{
+        opacity: 0%;
+    }
+}
+
 @keyframes floating{
     from{
         filter:hue-rotate(0) blur(1.75px);

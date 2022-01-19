@@ -1,5 +1,5 @@
 class BattleMap {
-    private _isGameOn:boolean;
+    private _isGameOn: boolean;
     private _htmlObject: HTMLElement;
 
     private _height: number;
@@ -11,7 +11,7 @@ class BattleMap {
     private _entities: Entity[] = [];
     private _enemies: Enemy[] = [];
     private _bullets: Bullet[] = [];
-    private _bonuses:Bonus[] = [];
+    private _bonuses: Bonus[] = [];
 
     private _enemyMoveSpeed: string;
     private _enemyAttackSpeed: string;
@@ -21,30 +21,33 @@ class BattleMap {
     private _enemySpawnCounter = 0;
     private _enemySpawnBorder;
 
+    private _bonusSpawnCounter = 0;
+    private _bonusSpawnBorder = 125;
+
     private _points: number = 0;
 
     public player: Hero;
 
-    private _movingAccess:boolean = true;
-    private _attackAccess:boolean = true;
+    private _movingAccess: boolean = true;
+    private _attackAccess: boolean = true;
 
-    private _movingBlockDuration:number = 200;
-    private _attackBlockDuration:number = 300;
+    private _movingBlockDuration: number = 200;
+    private _attackBlockDuration: number = 300;
 
     private blockMovingAccess() {
         this._movingAccess = false;
     }
-    
+
     private unblockMovingAccess() {
         setTimeout(() => {
             this._movingAccess = true;
         }, this._movingBlockDuration)
     }
-    
+
     private blockAttackAccess() {
         this._attackAccess = false;
     }
-    
+
     private unblockAttackAccess() {
         setTimeout(() => {
             this._attackAccess = true;
@@ -78,15 +81,15 @@ class BattleMap {
 
         switch (this.enemySpawnSpeed) {
             case 1:
-                this._enemySpawnBorder = 11;
+                this._enemySpawnBorder = 20;
                 break;
 
             case 2:
-                this._enemySpawnBorder = 8;
+                this._enemySpawnBorder = 15;
                 break;
 
             case 3:
-                this._enemySpawnBorder = 5;
+                this._enemySpawnBorder = 11;
                 break;
         }
         this.player = new Hero(this, this._cells[0][this._height - 2]);
@@ -173,7 +176,7 @@ class BattleMap {
         });
 
         this._enemySpawnCounter++;
-        if (this._enemySpawnCounter == this._enemySpawnBorder) {
+        if (this._enemySpawnCounter >= this._enemySpawnBorder) {
             this._enemySpawnCounter = 0;
 
             let cellForEnemy: Cell = this.findCellToAddEnemy();
@@ -182,10 +185,20 @@ class BattleMap {
             }
         }
 
-        if(this._isGameOn){
-            setTimeout(()=>{
+        this._bonusSpawnCounter++;
+        if (this._bonusSpawnCounter >= this._bonusSpawnBorder) {
+            this._bonusSpawnCounter = 0;
+
+            let cellForBonus: Cell = this.findCellToAddBonus();
+            if (cellForBonus !== null) {
+                this.addRandomBonus(cellForBonus);
+            }
+        }
+
+        if (this._isGameOn) {
+            setTimeout(() => {
                 this.updateMap();
-            },100);
+            }, 100);
         }
     }
 
@@ -270,6 +283,83 @@ class BattleMap {
         this._bullets.push(bullet);
     }
 
+    private findCellToAddBonus(): Cell {
+        let possibleCells: Cell[] = [];
+        let cellsCounter: number;
+        for (let i = 0; i < this._width - 1; i++) {
+            for (let j = 2; j < this._height - 3; j++) {
+                if (!this.getCell(i, j).isContainsEnemy() && !this.getCell(i, j).isContainsHero() && !this.getCell(i, j).isContainsBonus()) {
+                    cellsCounter++;
+
+                    possibleCells.push(this.getCell(i, j));
+                }
+            }
+        }
+
+        // console.log("//", possibleCells);
+        if (possibleCells.length === 0) {
+            return null;
+        }
+
+        return possibleCells[getRandomInt(0, possibleCells.length)];
+    }
+
+    private addRandomBonus(cell: Cell): void {
+        let randomInt: number = getRandomInt(1,5);
+        let newBonus: Bonus;
+        if (randomInt === 1) {
+            newBonus = new HealthBonus(this, cell);
+            this._entities.push(newBonus);
+            this._bonuses.push(newBonus);
+            return;
+        }
+
+        if (randomInt === 2) {
+            newBonus = new AttackSpeedBonus(this, cell);
+            this._entities.push(newBonus);
+            this._bonuses.push(newBonus);
+            return;
+        }
+
+        if (randomInt === 3) {
+            newBonus = new MoveSpeedBonus(this, cell);
+            this._entities.push(newBonus);
+            this._bonuses.push(newBonus);
+            return;
+        }
+
+        if (randomInt === 4) {
+            newBonus = new enemyMoveSpeedDebuffBonus(this, cell);
+            this._entities.push(newBonus);
+            this._bonuses.push(newBonus);
+            return;
+        }
+    }
+
+    public increasePlayerAttackSpeed(newAS: number, duration: number): void {
+        let oldAS = this._attackBlockDuration;
+        this._attackBlockDuration = newAS;
+
+        setTimeout(() => {
+            this._attackBlockDuration = oldAS;
+        }, duration);
+    }
+
+    public increasePlayerMoveSpeed(newMS: number, duration: number): void {
+        let oldMS = this._movingBlockDuration;
+        this._movingBlockDuration = newMS;
+
+        setTimeout(() => {
+            this._movingBlockDuration = oldMS;
+        }, duration);
+    }
+
+    public decreaseEnemyMoveSpeed(coef: number, duration: number) {
+        this._enemies.forEach(enemy => {
+            enemy.decreaseMoveSpeed(coef, duration);
+        });
+    }
+
     private initPlayerControls() {
         document.getElementById("arrow_top").onclick = function () {
             if (battleMap._movingAccess) {
@@ -284,9 +374,9 @@ class BattleMap {
                 battleMap.player.move(1, 0);
                 battleMap.unblockMovingAccess();
             }
-    
+
         };
-    
+
         document.getElementById("arrow_down").onclick = function () {
             if (battleMap._movingAccess) {
                 battleMap.blockMovingAccess();
@@ -294,7 +384,7 @@ class BattleMap {
                 battleMap.unblockMovingAccess();
             }
         };
-    
+
         document.getElementById("arrow_left").onclick = function () {
             if (battleMap._movingAccess) {
                 battleMap.blockMovingAccess();
@@ -302,7 +392,7 @@ class BattleMap {
                 battleMap.unblockMovingAccess();
             }
         };
-    
+
         document.getElementById("shoot").onclick = function () {
             if (battleMap._attackAccess) {
                 battleMap.blockAttackAccess();
@@ -310,7 +400,7 @@ class BattleMap {
                 battleMap.unblockAttackAccess();
             }
         };
-    
+
         document.addEventListener('keydown', function (event) {
             if (event.code == 'ArrowUp') {
                 if (battleMap._movingAccess) {
@@ -320,7 +410,7 @@ class BattleMap {
                 }
                 return;
             }
-    
+
             if (event.code == 'ArrowRight') {
                 if (battleMap._movingAccess) {
                     battleMap.blockMovingAccess();
@@ -329,7 +419,7 @@ class BattleMap {
                 }
                 return;
             }
-    
+
             if (event.code == 'ArrowDown') {
                 if (battleMap._movingAccess) {
                     battleMap.blockMovingAccess();
@@ -338,7 +428,7 @@ class BattleMap {
                 }
                 return;
             }
-    
+
             if (event.code == 'ArrowLeft') {
                 if (battleMap._movingAccess) {
                     battleMap.blockMovingAccess();
@@ -347,7 +437,7 @@ class BattleMap {
                 }
                 return;
             }
-    
+
             if (event.code == 'Space') {
                 if (battleMap._attackAccess) {
                     battleMap.blockAttackAccess();
@@ -357,6 +447,6 @@ class BattleMap {
                 return;
             }
         })
-    
+
     }
 }

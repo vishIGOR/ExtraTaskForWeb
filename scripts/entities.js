@@ -109,8 +109,29 @@ var Hero = /** @class */ (function (_super) {
     Hero.prototype.getDamage = function (value) {
         _super.prototype.getDamage.call(this, value);
         this._map.redrawHitPoints();
+        document.getElementById("screenForDamagingHero").style.zIndex = "2000";
+        document.getElementById("screenForDamagingHero").classList.add("heroIsDamaged");
+        setTimeout(function () {
+            document.getElementById("screenForDamagingHero").style.zIndex = "-2000";
+            document.getElementById("screenForDamagingHero").classList.remove("heroIsDamaged");
+        }, 300);
     };
     Hero.prototype.chooseAction = function () {
+        //все люди совершают ошибки архитектуры...
+        //?каждый раз, когда эта функция вызывается, где-то плачет одна Барбара Лисков(
+    };
+    Hero.prototype.checkCellsForBonuses = function () {
+        for (var i = 0; i < this._width; i++) {
+            for (var j = 0; j < this._height; j++) {
+                if (this._map.getCell(this._cell.x + i, this._cell.y + j).isContainsBonus()) {
+                    this._map.getCell(this._cell.x + i, this._cell.y + j).useBonuses();
+                }
+            }
+        }
+    };
+    Hero.prototype.move = function (x, y) {
+        _super.prototype.move.call(this, x, y);
+        this.checkCellsForBonuses();
     };
     Hero.prototype.shot = function () {
         var newBullet = new HeroBullet(this._map, this._map.getCell(this._cell.x, this._cell.y - 1));
@@ -118,6 +139,11 @@ var Hero = /** @class */ (function (_super) {
     };
     Hero.prototype.die = function () {
         this._map.endGame();
+    };
+    Hero.prototype.beHealed = function (value) {
+        this._hitPoints += value;
+        this._maxHitPoints += value;
+        this._map.redrawHitPoints();
     };
     return Hero;
 }(Spaceship));
@@ -161,6 +187,23 @@ var Enemy = /** @class */ (function (_super) {
         this._map.deleteEntity(this);
         var explosion = new Explosion(this._map, this._cell, this._explosionType);
     };
+    Enemy.prototype.decreaseMoveSpeed = function (coef, duration) {
+        var _this = this;
+        this._moveBorder *= coef;
+        setTimeout(function () {
+            _this._moveBorder /= coef;
+        }, duration);
+    };
+    Enemy.prototype.getDamage = function (value) {
+        var _this = this;
+        _super.prototype.getDamage.call(this, value);
+        if (this.hitPoints > 0) {
+            this._htmlObject.classList.add("damagedEnemy");
+            setTimeout(function () {
+                _this._htmlObject.classList.remove("damagedEnemy");
+            }, 200);
+        }
+    };
     return Enemy;
 }(Spaceship));
 var ShootingEnemy = /** @class */ (function (_super) {
@@ -201,7 +244,7 @@ var ShootingEnemy = /** @class */ (function (_super) {
         }
     };
     ShootingEnemy.prototype.isPossibleToShot = function () {
-        if (this._cell.y + this._height > this._map.height) {
+        if (this._cell.y + this._height >= this._map.height) {
             return false;
         }
         for (var i = this._cell.y + this._height; i < this._map.height; i++) {
@@ -244,13 +287,13 @@ var Enemy1 = /** @class */ (function (_super) {
         }
         switch (_this._map.enemyAttackSpeed) {
             case 1:
-                _this._attackBorder = 22;
+                _this._attackBorder = 26;
                 break;
             case 2:
-                _this._attackBorder = 15;
+                _this._attackBorder = 20;
                 break;
             case 3:
-                _this._attackBorder = 11;
+                _this._attackBorder = 14;
                 break;
         }
         _this._attackCounter = _this._attackBorder;
@@ -293,13 +336,13 @@ var Enemy2 = /** @class */ (function (_super) {
         }
         switch (_this._map.enemyAttackSpeed) {
             case 1:
-                _this._attackBorder = 26;
+                _this._attackBorder = 32;
                 break;
             case 2:
-                _this._attackBorder = 18;
+                _this._attackBorder = 26;
                 break;
             case 3:
-                _this._attackBorder = 12;
+                _this._attackBorder = 18;
                 break;
         }
         _this._attackCounter = _this._attackBorder;
@@ -308,7 +351,7 @@ var Enemy2 = /** @class */ (function (_super) {
         return _this;
     }
     Enemy2.prototype.shot = function () {
-        var newBullet = new Enemy2Bullet(this._map, this._map.getCell(this._cell.x, this._cell.y + 2));
+        var newBullet = new Enemy2Bullet(this._map, this._map.getCell(this._cell.x, this._cell.y + this._height));
         this._map.addBullet(newBullet);
     };
     return Enemy2;
@@ -321,7 +364,7 @@ var Enemy3 = /** @class */ (function (_super) {
         _this._width = 2;
         _this._maxHitPoints = 2;
         _this._hitPoints = 2;
-        _this._reward = 30;
+        _this._reward = 45;
         _this._htmlObject = document.createElement("div");
         _this._htmlObject.classList.add("entity");
         _this._htmlObject.classList.add("enemy3");
@@ -342,13 +385,13 @@ var Enemy3 = /** @class */ (function (_super) {
         }
         switch (_this._map.enemyAttackSpeed) {
             case 1:
-                _this._attackBorder = 22;
+                _this._attackBorder = 32;
                 break;
             case 2:
-                _this._attackBorder = 15;
+                _this._attackBorder = 25;
                 break;
             case 3:
-                _this._attackBorder = 11;
+                _this._attackBorder = 17;
                 break;
         }
         _this._attackCounter = _this._attackBorder;
@@ -357,8 +400,8 @@ var Enemy3 = /** @class */ (function (_super) {
         return _this;
     }
     Enemy3.prototype.shot = function () {
-        var newBullet = new Enemy3Bullet(this._map, this._map.getCell(this._cell.x, this._cell.y + 1));
-        var newBullet2 = new Enemy3Bullet(this._map, this._map.getCell(this._cell.x + 1, this._cell.y + 1));
+        var newBullet = new Enemy3Bullet(this._map, this._map.getCell(this._cell.x, this._cell.y + this._height));
+        var newBullet2 = new Enemy3Bullet(this._map, this._map.getCell(this._cell.x + 1, this._cell.y + this._height));
         this._map.addBullet(newBullet);
         this._map.addBullet(newBullet2);
     };
@@ -393,13 +436,13 @@ var Enemy4 = /** @class */ (function (_super) {
         }
         switch (_this._map.enemyAttackSpeed) {
             case 1:
-                _this._attackBorder = 18;
+                _this._attackBorder = 28;
                 break;
             case 2:
-                _this._attackBorder = 13;
+                _this._attackBorder = 23;
                 break;
             case 3:
-                _this._attackBorder = 10;
+                _this._attackBorder = 18;
                 break;
         }
         _this._attackCounter = _this._attackBorder;
@@ -408,14 +451,16 @@ var Enemy4 = /** @class */ (function (_super) {
         return _this;
     }
     Enemy4.prototype.shot = function () {
-        var newBullet = new Enemy4Bullet(this._map, this._map.getCell(this._cell.x, this._cell.y + 1));
+        var newBullet = new Enemy4Bullet(this._map, this._map.getCell(this._cell.x, this._cell.y + this._height));
         this._map.addBullet(newBullet);
     };
     return Enemy4;
 }(ShootingEnemy));
 // abstract class KamikazeEnemy extends Enemy {
 //     public chooseAction(stage: number): void {
-//? в реализации отказано
+//? я запрещаю вам реализовывать камикадзе
+//?                              - Стетхэм
+//! ладно, не буду
 //     }
 // }
 var Bullet = /** @class */ (function (_super) {
@@ -690,6 +735,102 @@ var Bonus = /** @class */ (function (_super) {
     };
     return Bonus;
 }(Entity));
-// class HealthBonus extends Bonus{
-//! здесь закончили
-// }
+var HealthBonus = /** @class */ (function (_super) {
+    __extends(HealthBonus, _super);
+    function HealthBonus(map, startCell) {
+        var _this = _super.call(this, map, startCell) || this;
+        _this._width = 1;
+        _this._height = 1;
+        _this._healValue = 2;
+        _this._dyingBorder = 75;
+        _this._htmlObject = document.createElement("div");
+        _this._htmlObject.classList.add("entity");
+        _this._htmlObject.classList.add("bonus-heal");
+        _this._htmlObject.classList.add("width-one");
+        _this._htmlObject.classList.add("height-one");
+        _this._map.htmlObject.append(_this._htmlObject);
+        _this.redraw();
+        _this.takeCells();
+        return _this;
+    }
+    HealthBonus.prototype.bePickedUp = function () {
+        this._map.player.beHealed(this._healValue);
+        this.die();
+    };
+    return HealthBonus;
+}(Bonus));
+var AttackSpeedBonus = /** @class */ (function (_super) {
+    __extends(AttackSpeedBonus, _super);
+    function AttackSpeedBonus(map, startCell) {
+        var _this = _super.call(this, map, startCell) || this;
+        _this._width = 1;
+        _this._height = 1;
+        _this._newAttackSpeed = 150;
+        _this._duration = 5000;
+        _this._dyingBorder = 70;
+        _this._htmlObject = document.createElement("div");
+        _this._htmlObject.classList.add("entity");
+        _this._htmlObject.classList.add("bonus-heroAttackSpeed");
+        _this._htmlObject.classList.add("width-one");
+        _this._htmlObject.classList.add("height-one");
+        _this._map.htmlObject.append(_this._htmlObject);
+        _this.redraw();
+        _this.takeCells();
+        return _this;
+    }
+    AttackSpeedBonus.prototype.bePickedUp = function () {
+        this._map.increasePlayerAttackSpeed(this._newAttackSpeed, this._duration);
+        this.die();
+    };
+    return AttackSpeedBonus;
+}(Bonus));
+var MoveSpeedBonus = /** @class */ (function (_super) {
+    __extends(MoveSpeedBonus, _super);
+    function MoveSpeedBonus(map, startCell) {
+        var _this = _super.call(this, map, startCell) || this;
+        _this._width = 1;
+        _this._height = 1;
+        _this._newMoveSpeed = 100;
+        _this._duration = 5000;
+        _this._dyingBorder = 70;
+        _this._htmlObject = document.createElement("div");
+        _this._htmlObject.classList.add("entity");
+        _this._htmlObject.classList.add("bonus-heroMoveSpeed");
+        _this._htmlObject.classList.add("width-one");
+        _this._htmlObject.classList.add("height-one");
+        _this._map.htmlObject.append(_this._htmlObject);
+        _this.redraw();
+        _this.takeCells();
+        return _this;
+    }
+    MoveSpeedBonus.prototype.bePickedUp = function () {
+        this._map.increasePlayerAttackSpeed(this._newMoveSpeed, this._duration);
+        this.die();
+    };
+    return MoveSpeedBonus;
+}(Bonus));
+var enemyMoveSpeedDebuffBonus = /** @class */ (function (_super) {
+    __extends(enemyMoveSpeedDebuffBonus, _super);
+    function enemyMoveSpeedDebuffBonus(map, startCell) {
+        var _this = _super.call(this, map, startCell) || this;
+        _this._width = 1;
+        _this._height = 1;
+        _this._debuffCoef = 2;
+        _this._duration = 5000;
+        _this._dyingBorder = 70;
+        _this._htmlObject = document.createElement("div");
+        _this._htmlObject.classList.add("entity");
+        _this._htmlObject.classList.add("bonus-enemyMoveSpeedDebuff");
+        _this._htmlObject.classList.add("width-one");
+        _this._htmlObject.classList.add("height-one");
+        _this._map.htmlObject.append(_this._htmlObject);
+        _this.redraw();
+        _this.takeCells();
+        return _this;
+    }
+    enemyMoveSpeedDebuffBonus.prototype.bePickedUp = function () {
+        this._map.decreaseEnemyMoveSpeed(this._debuffCoef, this._duration);
+        this.die();
+    };
+    return enemyMoveSpeedDebuffBonus;
+}(Bonus));

@@ -53,5 +53,21 @@ var Cell = /** @class */ (function () {
         });
         return flag;
     };
+    Cell.prototype.isContainsBonus = function () {
+        var flag = false;
+        this._entities.forEach(function (entity) {
+            if (entity instanceof Bonus) {
+                flag = true;
+            }
+        });
+        return flag;
+    };
+    Cell.prototype.useBonuses = function () {
+        this._entities.forEach(function (entity) {
+            if (entity instanceof Bonus) {
+                entity.bePickedUp();
+            }
+        });
+    };
     return Cell;
 }());

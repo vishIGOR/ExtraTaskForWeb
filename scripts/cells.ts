@@ -52,4 +52,23 @@ class Cell {
         
         return flag;
     }
+
+    public isContainsBonus():boolean{
+        let flag:boolean = false;
+        this._entities.forEach(entity => {
+            if(entity instanceof Bonus){
+                flag = true;
+            }
+        });
+        
+        return flag;
+    }
+
+    public useBonuses():void{
+        this._entities.forEach(entity => {
+            if(entity instanceof Bonus){
+                entity.bePickedUp();
+            }
+        });
+    }
 }
