@@ -141,13 +141,11 @@ function getScores() {
     })
         .then((json) => {
         let currentNumber = 0;
-        console.log(json[0]);
         json[0].items.forEach(item => {
             resultTable.push([0, ""]);
             resultTable[currentNumber][0] = Number(item.name);
             resultTable[currentNumber][1] = item.description;
             currentNumber++;
-            console.log(resultTable[currentNumber - 1]);
         });
         resultTable = resultTable.sort(sortTuples);
         if (resultTable.length < 5 || (resultTable.length > 5 && newScore > resultTable[4][0])

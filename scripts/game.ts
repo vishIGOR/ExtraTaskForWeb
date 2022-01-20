@@ -7,9 +7,6 @@ let battleMap = new BattleMap(60);
 //     battleMap.updateMap();
 // }, 100);
 
-// window.onresize = () => {
-//     battleMap = new BattleMap(60);
-//     initPlayerControls();
-//     battleMap.startGame();
-//     alert("Размер окна изменён. Размер поля изменён, Игра запущена заново.")
-// }
+window.onresize = () => {
+    window.location.reload();
+}

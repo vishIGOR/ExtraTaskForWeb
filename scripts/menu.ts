@@ -150,7 +150,6 @@ function getScores() {
         .then((json) => {
             let currentNumber: number = 0;
 
-            console.log(json[0]);
 
             json[0].items.forEach(item => {
 
@@ -159,8 +158,6 @@ function getScores() {
                 resultTable[currentNumber][1] = item.description;
 
                 currentNumber++;
-
-                console.log(resultTable[currentNumber - 1]);
             });
 
             resultTable = resultTable.sort(sortTuples);

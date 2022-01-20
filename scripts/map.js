@@ -1,5 +1,6 @@
 var BattleMap = /** @class */ (function () {
     function BattleMap(sellSize) {
+        this.secondChance = true;
         this._entities = [];
         this._enemies = [];
         this._bullets = [];
@@ -121,6 +122,11 @@ var BattleMap = /** @class */ (function () {
     });
     BattleMap.prototype.endGame = function () {
         //логика пересоздания и результатов
+        if (this.secondChance) {
+            this.secondChance = false;
+            this.player.beHealed(1 - this.player.hitPoints);
+            return;
+        }
         this._isGameOn = false;
         localStorage.setItem("currentScore", String(this._points));
         document.location = "/menu.html";

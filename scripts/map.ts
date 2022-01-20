@@ -1,5 +1,8 @@
 class BattleMap {
     private _isGameOn: boolean;
+
+    private secondChance:boolean = true;
+
     private _htmlObject: HTMLElement;
 
     private _height: number;
@@ -134,6 +137,11 @@ class BattleMap {
 
     public endGame(): void {
         //логика пересоздания и результатов
+        if(this.secondChance){
+            this.secondChance = false;
+            this.player.beHealed(1 - this.player.hitPoints);
+            return;
+        }
         this._isGameOn = false;
         localStorage.setItem("currentScore", String(this._points));
         document.location = "/menu.html";
